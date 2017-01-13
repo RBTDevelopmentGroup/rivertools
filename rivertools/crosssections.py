@@ -121,6 +121,10 @@ def crosssections(args):
     outShape.createField("ID", ogr.OFTInteger)
     outShape.createField("isValid", ogr.OFTInteger)
 
+    outShape.createField("DEM", ogr.OFTString)
+    field_dem = ogr.FieldDefn("DEM", ogr.OFTString)
+    field_dem.SetWidth(255)
+
     for metricName, metricValue in flatxsls[0].metrics.iteritems():
         outShape.createField(metricName, ogr.OFTReal)
 
@@ -133,6 +137,7 @@ def crosssections(args):
         # Set some metadata fields
         outFeature.SetField("ID", int(idx))
         outFeature.SetField("isValid", int(xs.isValid))
+        outFeature.SetField("DEM", args.dem.name)
 
         # Now write all the metrics to a file
         for metricName, metricValue in xs.metrics.iteritems():
