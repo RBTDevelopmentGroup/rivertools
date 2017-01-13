@@ -8,7 +8,7 @@ class TestRasterClass(unittest.TestCase):
     There is only one method we wrote for this:
     """
     def test_getPixelVal(self):
-        from rivertools.lib.raster import Raster
+        from rivertools.raster import Raster
         self.assertTrue(False)
 
     def test_isClose(self):
@@ -16,29 +16,29 @@ class TestRasterClass(unittest.TestCase):
         Oh, also this little helper method:
         I didn't write it so we'd better test it well
         """
-        from rivertools.lib.raster import isclose
+        from rivertools.raster import isclose
         self.assertTrue(False)
 
 class TestShapeHelpers(unittest.TestCase):
 
     def test_getBufferedBounds(self):
-        from rivertools.lib.shapes import getBufferedBounds
+        from rivertools.shapes import getBufferedBounds
         self.assertTrue(False)
 
     def test_getDiag(self):
-        from rivertools.lib.shapes import getDiag
+        from rivertools.shapes import getDiag
         self.assertTrue(False)
 
     def test_rectIntersect(self):
-        from rivertools.lib.shapes import rectIntersect
+        from rivertools.shapes import rectIntersect
         self.assertTrue(False)
 
     def test_getExtrapoledLine(self):
-        from rivertools.lib.shapes import getExtrapoledLine
+        from rivertools.shapes import getExtrapoledLine
         self.assertTrue(False)
 
     def test_reconnectLine(self):
-        from rivertools.lib.shapes import reconnectLine
+        from rivertools.shapes import reconnectLine
         self.assertTrue(False)
 
     def test_splitClockwise(self):
@@ -46,21 +46,21 @@ class TestShapeHelpers(unittest.TestCase):
         This is the big one. Needs more careful testing than the rest
         :return:
         """
-        from rivertools.lib.shapes import splitClockwise
+        from rivertools.shapes import splitClockwise
         self.assertTrue(False)
 
 class TestMetricClass(unittest.TestCase):
 
     def test_interpolateRasterAlongLine(self):
-        from rivertools.lib.metrics import interpolateRasterAlongLine
+        from rivertools.metrics import interpolateRasterAlongLine
         self.assertTrue(False)
 
     def test_dryWidth(self):
-        from rivertools.lib.metrics import dryWidth
+        from rivertools.metrics import dryWidth
         self.assertTrue(False)
 
     def test_meanDepth(self):
-        from rivertools.lib.metrics import meanDepth
+        from rivertools.metrics import meanDepth
 
         depthValues = [1, 2, 3, 4, 5]
 
@@ -78,11 +78,23 @@ class TestMetricClass(unittest.TestCase):
         self.assertEqual(fValue, 0)
 
     def test_maxDepth(self):
-        from rivertools.lib.metrics import maxDepth
-        self.assertTrue(False)
+        from rivertools.metrics import maxDepth
+
+        # The pass case
+        self.assertEqual(maxDepth([1, 2, 3, 4, 5]), 5)
+
+        # The double case
+        self.assertEqual(maxDepth([1, 2, 3, 5, 5]), 5)
+
+        # All values nan
+        self.assertTrue(np.isnan(maxDepth([np.nan, np.nan, np.nan, np.nan, np.nan])))
+
+        # One value nan
+        self.assertEqual(maxDepth([np.nan, 2, 3, 4, 5]), 5)
+
 
     def test_getRefElev(self):
-        from rivertools.lib.metrics import getRefElev
+        from rivertools.metrics import getRefElev
         self.assertTrue(False)
 
 
@@ -101,11 +113,11 @@ class TestMetricClass(unittest.TestCase):
 class TestVoronoiClass(unittest.TestCase):
 
     def test_collectCenterLines(self):
-        from rivertools.lib.vor import NARVoronoi
+        from rivertools.vor import NARVoronoi
         self.assertTrue(False)
 
     def test_createshapes(self):
-        from rivertools.lib.vor import NARVoronoi
+        from rivertools.vor import NARVoronoi
         self.assertTrue(False)
 
 class TestGeoSmoothingClass(unittest.TestCase):

@@ -2,10 +2,10 @@ from shapely.geometry import *
 import argparse
 import sys
 import numpy as np
-from lib.shapes import *
-from lib.plotting import Plotter
-from lib.logger import Logger
-from lib.metrics import *
+from shapes import *
+from plotting import Plotter
+from logger import Logger
+from metrics import *
 
 def crosssections(args):
     """

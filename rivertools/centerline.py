@@ -1,13 +1,13 @@
 import sys
 from shapely.geometry import *
 import argparse
-from lib.logger import Logger
+from logger import Logger
 
 # We wrote two little files with helper methods:
-from lib.vor import NARVoronoi
-from lib.shapes import *
-from lib.geosmoothing import *
-from lib.plotting import Plotter
+from vor import NARVoronoi
+from shapes import *
+from geosmoothing import *
+from plotting import Plotter
 
 ########################################################
 # Here are some factors you can play with
