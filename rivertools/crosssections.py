@@ -6,6 +6,9 @@ from shapes import *
 from plotting import Plotter
 from logger import Logger
 from metrics import *
+from os import path
+from datetime import datetime
+from time import strftime
 
 def crosssections(args):
     """
@@ -63,7 +66,7 @@ def crosssections(args):
         channelID = line['fields']['ID']
 
         # Get 50cm spaced points
-        for currDist in np.arange(0, linegeo.length, 0.5):
+        for currDist in np.arange(0, linegeo.length, args.separation):
             # Now create the cross sections with length = 2 * diag
             xsgeos, junk = createTangentialLine(currDist, linegeo, rivershape)
             throwaway += junk
@@ -108,7 +111,7 @@ def crosssections(args):
     # --------------------------------------------------------
     # Flatten the list
     flatxsls = [xs for xslist in allxslines for xs in xslist]
-    calcMetrics(flatxsls, polyRiverShape, args.dem.name)
+    calcMetrics(flatxsls, polyRiverShape, args.dem.name, args.stationsep)
 
     # --------------------------------------------------------
     # Write the output Shapefile
@@ -121,9 +124,10 @@ def crosssections(args):
     outShape.createField("ID", ogr.OFTInteger)
     outShape.createField("isValid", ogr.OFTInteger)
 
-    outShape.createField("DEM", ogr.OFTString)
-    field_dem = ogr.FieldDefn("DEM", ogr.OFTString)
-    field_dem.SetWidth(255)
+    # Define and add the metadata fields to the ShapeFile.
+    # The are not the essential fields (such as ID above) or the metric
+    # fields that are defined during XS creation. These are things like file paths etc.
+    AddMetaFields(outShape)
 
     for metricName, metricValue in flatxsls[0].metrics.iteritems():
         outShape.createField(metricName, ogr.OFTReal)
@@ -137,7 +141,13 @@ def crosssections(args):
         # Set some metadata fields
         outFeature.SetField("ID", int(idx))
         outFeature.SetField("isValid", int(xs.isValid))
-        outFeature.SetField("DEM", args.dem.name)
+        outFeature.SetField("Name", "Cross Section {0}".format(idx))
+        outFeature.SetField("Date", datetime.now().strftime('%Y-%m-%d'))
+        outFeature.SetField("CLine", path.abspath(args.centerline.name))
+        outFeature.SetField("DEM", path.abspath(args.dem.name))
+        outFeature.SetField("Banks", path.abspath(args.river.name))
+        outFeature.SetField("Extension", 0) # lateral extension currently always zero
+        outFeature.SetField("StatSep", args.stationsep)
 
         # Now write all the metrics to a file
         for metricName, metricValue in xs.metrics.iteritems():
@@ -173,6 +183,33 @@ def crosssections(args):
 
         plt.showPlot(getBufferedBounds(rivershape, 10).bounds)
 
+def AddMetaFields(outShape):
+
+    # Field to store the date that the cross sections were generated
+    outShape.createField("Date", ogr.OFTString)
+    ogr.FieldDefn("Date", ogr.OFTString).SetWidth(10)
+
+    # Field to store the cross section name
+    outShape.createField("Name", ogr.OFTString)
+    ogr.FieldDefn("Name", ogr.OFTString).SetWidth(255)
+
+    # Field to store the path to the DEM ShapeFile
+    outShape.createField("DEM", ogr.OFTString)
+    ogr.FieldDefn("DEM", ogr.OFTString).SetWidth(255)
+
+    # Field to store the path to the river banks ShapeFile
+    outShape.createField("Banks", ogr.OFTString)
+    ogr.FieldDefn("Banks", ogr.OFTString).SetWidth(255)
+
+    # Field to store the path to the centerline ShapeFile
+    outShape.createField("CLine", ogr.OFTString)
+    ogr.FieldDefn("CLine", ogr.OFTString).SetWidth(255)
+
+    # Lateral extension beyond the river banks polygon.
+    outShape.createField("Extension", ogr.OFTInteger)
+
+    # Lateral spacing of stations along a cross section
+    outShape.createField("StatSep", ogr.OFTReal)
 
 def main():
 
@@ -194,6 +231,12 @@ def main():
                         type=argparse.FileType('r'))
     parser.add_argument('crosssections',
                         help='Path to the desired output crosssections')
+    parser.add_argument('separation',
+                        type=float,
+                        help='Downstream spacing between cross sections')
+    parser.add_argument('stationsep',
+                        type=float,
+                        help='Lateral spacing between vertical DEM measurements')
     parser.add_argument('--noviz',
                         help = 'Disable result visualization (faster)',
                         action='store_true',

@@ -4,7 +4,7 @@ import numpy as np
 from shapely.geometry import *
 import math
 
-def calcMetrics(xsobjList, rivershapeWithDonuts, sDEM, fStationInterval = 0.5):
+def calcMetrics(xsobjList, rivershapeWithDonuts, sDEM, fStationInterval):
     """
     Jhu Li: Do the thing!!!!!!
     :param validXS: List of centerlines, each contains a list of cross sections on that centerline. Each cross section is XSObj that has member Shapely Line and empty member dict for metrics
@@ -53,6 +53,10 @@ def calcMetrics(xsobjList, rivershapeWithDonuts, sDEM, fStationInterval = 0.5):
             "MeanDepth": metricSanitize(xsmMeanDepth),
             "W2MxDepth": metricSanitize(xsmW2MxDepth),
             "W2AvDepth": metricSanitize(xsmW2AvDepth),
+            "BFElev": metricSanitize(refElev),
+            "BFArea": 0,
+            "HRadius": 0,
+            "NumStat":0
         }
 
 def metricSanitize(metric):
