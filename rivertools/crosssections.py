@@ -190,7 +190,7 @@ def main():
     parser.add_argument('crosssections',
                         help='Path to the desired output crosssections')
     parser.add_argument('--noviz',
-                        help = 'Disable result visualization',
+                        help = 'Disable result visualization (faster)',
                         action='store_true',
                         default=False)
     args = parser.parse_args()

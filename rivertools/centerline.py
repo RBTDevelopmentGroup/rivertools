@@ -11,10 +11,6 @@ from plotting import Plotter
 
 ########################################################
 # Here are some factors you can play with
-
-# This is the smoothing factor (k) that we apply to the spline AFTER the centerline has
-# been created
-LINE_SPL_SMPAR = 5
 # The factor to throw into shapely.simplify (http://toblerity.org/shapely/manual.html)
 SHAPELY_SIMPLIFY = 0.01
 ########################################################
@@ -55,12 +51,15 @@ def centerline(args):
     log.info("Combining exterior and qualifying islands...")
     rivershape = Polygon(polyRiverShape.exterior).difference(multipolIslands)
 
-    # The Spline smooth gives us round curves.
-    log.info("Spline Smoothing...")
-    riverspliner = GeoSmoothing()
-    smoothRiver = riverspliner.smooth(rivershape)
-    # The simplifyer reduces point count to make things manageable
-    smoothRiver = smoothRiver.simplify(SHAPELY_SIMPLIFY)
+    if (args.smoothing > 0):
+        # The Spline smooth gives us round curves.
+        log.info("Spline Smoothing...")
+        riverspliner = GeoSmoothing()
+        smoothRiver = riverspliner.smooth(rivershape)
+        # The simplifyer reduces point count to make things manageable
+        smoothRiver = smoothRiver.simplify(SHAPELY_SIMPLIFY)
+    else:
+        smoothRiver = rivershape
 
     # --------------------------------------------------------
     # Find the Centerline
@@ -106,12 +105,15 @@ def centerline(args):
     log.info("Calculating Voronoi Polygons...")
     myVorL = NARVoronoi(points)
 
-    # This is the function that does the actual work of creating the centerline
-    log.info("Spline Smoothing Main Line...")
-    linespliner = GeoSmoothing(spl_smpar=LINE_SPL_SMPAR)
     centerline = myVorL.collectCenterLines()
 
-    centerlineSmooth = linespliner.smooth(centerline)
+    if (args.smoothing > 0):
+        # This is the function that does the actual work of creating the centerline
+        log.info("Spline Smoothing Main Line...")
+        linespliner = GeoSmoothing(spl_smpar=args.smoothing)
+        centerlineSmooth = linespliner.smooth(centerline)
+    else:
+        centerlineSmooth = centerline
 
     # Trim to be inside the river shape.
     # TODO: Is this dangerous? Maybe.... Might want to do a bit of testing
@@ -128,12 +130,15 @@ def centerline(args):
             # to get just the bit that is different
             diffaltline = altLine.difference(centerline)
 
-            # Now smooth this line to be roughly the consistency of skippy peanut butter
-            smoothAlt = linespliner.smooth(diffaltline)
+            if (args.smoothing > 0):
+                # Now smooth this line to be roughly the consistency of skippy peanut butter
+                smoothAlt = linespliner.smooth(diffaltline)
 
-            # Now we reconnect the bit that is different with the smoothed
-            # Segment since smoothing can mess up the intersection
-            reconLine = reconnectLine(centerlineSmooth, smoothAlt)
+                # Now we reconnect the bit that is different with the smoothed
+                # Segment since smoothing can mess up the intersection
+                reconLine = reconnectLine(centerlineSmooth, smoothAlt)
+            else:
+                reconLine = diffaltline
 
             alternateLines.append(reconLine)
 
@@ -219,8 +224,12 @@ def main():
                         type=argparse.FileType('r'))
     parser.add_argument('centerline',
                         help='Path to the desired output centerline shapefile')
+    parser.add_argument('--smoothing',
+                        type=float,
+                        default=0,
+                        help='smoothing "s" factor for the curve. (default=0/None)')
     parser.add_argument('--noviz',
-                        help = 'Disable result visualization',
+                        help = 'Disable result visualization (faster)',
                         action='store_true',
                         default=False)
     args = parser.parse_args()
