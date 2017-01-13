@@ -1,6 +1,7 @@
 # Utility functions we need
 import unittest
 import numpy as np
+from shapely.geometry import *
 
 class TestRasterClass(unittest.TestCase):
     """
@@ -57,6 +58,30 @@ class TestMetricClass(unittest.TestCase):
 
     def test_dryWidth(self):
         from rivertools.metrics import dryWidth
+
+        # Create a polygon (with no donut)
+        aPoly = Polygon([(1, 1), (5, 1), (5, 5), (1, 5), (1, 1)])
+
+        # Create a line
+        aLine = LineString([(0, 2.5), (6, 2.5)])
+
+        fValue = dryWidth(aLine, aPoly)
+        self.assertEqual(fValue, 4)
+
+        aDonut = Polygon([(2, 2), (3, 2), (3, 3), (2, 3), (2, 2)])
+        aPolyWithDonut = aPoly.difference(aDonut)
+
+        from rivertools.plotting import Plotter
+        plt = Plotter()
+
+        # The shape of the river is grey (this is the one with only qualifying islands
+        plt.plotShape(aPolyWithDonut, '#AACCCC', 0.5, 5)
+        plt.plotShape(aLine, '#CCCCAA', 0.5, 10)
+        plt.showPlot((0, 0, 10, 10))
+
+        fValue = dryWidth(aLine, aPolyWithDonut)
+        self.assertEqual(fValue, 3)
+
         self.assertTrue(False)
 
     def test_meanDepth(self):
