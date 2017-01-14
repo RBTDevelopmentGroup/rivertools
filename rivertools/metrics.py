@@ -17,12 +17,11 @@ def calcMetrics(xsobjList, rivershapeWithDonuts, sDEM, fStationInterval):
 
     log.info("Calculating metrics for all crosssections")
     for xs in xsobjList:
-        arrRaw = interpolateRasterAlongLine(xs.geometry, dem, fStationInterval)
-        # Mask out the np.nan values
-        arrMasked = np.ma.masked_invalid(arrRaw)
+        regularPoints = interpolateRasterAlongLine(xs.geometry, fStationInterval)
+        arrRaw = lookupRasterValues(regularPoints, dem)
 
         # Get the reference Elevation from the edges
-        refElev = getRefElev(arrMasked)
+        refElev = getRefElev(arrRaw)
 
         xsmXSLength = xs.geometry.length
         xsmWetWidth = dryWidth(xs.geometry, rivershapeWithDonuts)
@@ -36,7 +35,7 @@ def calcMetrics(xsobjList, rivershapeWithDonuts, sDEM, fStationInterval):
             xsmW2AvDepth = 0
         else:
             # The depth array must be calculated
-            deptharr = refElev - arrMasked
+            deptharr = refElev - arrRaw
 
             xsmMaxDepth = maxDepth(deptharr)
             xsmMeanDepth = meanDepth(deptharr)
@@ -125,13 +124,30 @@ def dryWidth(xs, rivershapeWithDonuts):
 
     return sum([intersect.length for intersect in intersects])
 
-def interpolateRasterAlongLine(xs, raster, fStationInterval):
+def interpolateRasterAlongLine(xs, fStationInterval):
     """
-    Proof of concept. Get the raster values at every point along a cross section
+    Given a cross section (Linestring) and a spacing point return regularly spaced points
+    along that line
     :param xs:
-    :param raster:
+    :param fStationInterval:
     :return:
     """
     points = [xs.interpolate(currDist) for currDist in np.arange(0, xs.length, fStationInterval)]
+    # Add the endpoint if it doesn't already exist
+    if points[-1] != xs.coords[-1]:
+        points.append(Point(xs.coords[-1]))
+    return points
+
+def lookupRasterValues(points, raster):
+    """
+    Given an array of points with real-world coordinates, lookup values in raster
+    then mask out any nan/nodata values
+    :param points:
+    :param raster:
+    :return:
+    """
     vals = [raster.getPixelVal(pt.coords[0]) for pt in points]
-    return vals
+    # Mask out the np.nan values
+    arrMasked = np.ma.masked_invalid(vals)
+
+    return arrMasked

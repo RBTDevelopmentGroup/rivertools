@@ -1,6 +1,8 @@
 # Utility functions we need
 import unittest
 import numpy as np
+import math
+
 from shapely.geometry import *
 
 class TestRasterClass(unittest.TestCase):
@@ -18,20 +20,41 @@ class TestRasterClass(unittest.TestCase):
         I didn't write it so we'd better test it well
         """
         from rivertools.raster import isclose
-        self.assertTrue(False)
+
+        # Regular number test abs tolerance
+        self.assertTrue(isclose( 1.12, 1.11, rel_tol=1e-09, abs_tol=0.1))
+        self.assertFalse(isclose(1.12, 1.11, rel_tol=1e-09, abs_tol=0.01))
+
+        # Regular number test rel tolerance
+        self.assertTrue(isclose( 1.12, 1.11, rel_tol=1e-02, abs_tol=0))
+        self.assertFalse(isclose(1.12, 1.11, rel_tol=1e-03, abs_tol=0))
+
+        # Scientific notation test rel tolerance
+        self.assertTrue(isclose( 1.11112e-09, 1.11111e-09, rel_tol=1e-05, abs_tol=0))
+        self.assertFalse(isclose(1.11112e-09, 1.11111e-09, rel_tol=1e-06, abs_tol=0))
+
+        # Scientific notation test abs tolerance
+        self.assertTrue(isclose( 1.11112e-09, 1.11111e-09, rel_tol=1e-05, abs_tol=1e-05))
+        self.assertFalse(isclose(1.11112e-09, 1.11111e-09, rel_tol=1e-05, abs_tol=1e-06))
 
 class TestShapeHelpers(unittest.TestCase):
 
     def test_getBufferedBounds(self):
         from rivertools.shapes import getBufferedBounds
-        self.assertTrue(False)
+
+        testShape = getBufferedBounds(Polygon([(0,0), (0,1), (1,1), (1,0), (0,0)]), 10)
+        expectedBounds = (-10.0, -10.0, 11.0, 11.0)
+
+        self.assertEqual(testShape.bounds, expectedBounds)
 
     def test_getDiag(self):
         from rivertools.shapes import getDiag
-        self.assertTrue(False)
+        diag = getDiag(Polygon([(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]))
+        self.assertEqual(diag, math.sqrt(2))
 
     def test_rectIntersect(self):
         from rivertools.shapes import rectIntersect
+        diag = getDiag(Polygon([(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]))
         self.assertTrue(False)
 
     def test_getExtrapoledLine(self):
@@ -54,6 +77,22 @@ class TestMetricClass(unittest.TestCase):
 
     def test_interpolateRasterAlongLine(self):
         from rivertools.metrics import interpolateRasterAlongLine
+        xs = LineString([(0,0),(1,0)])
+
+        # Even test
+        points = interpolateRasterAlongLine(xs, 0.2)
+        self.assertEqual(len(points), 6)
+
+        # Uneven Test
+        points = interpolateRasterAlongLine(xs, 0.2001)
+        self.assertEqual(len(points), 6)
+
+        # Uneven Test 2
+        points = interpolateRasterAlongLine(xs, 0.19999)
+        self.assertEqual(len(points), 7)
+
+    def test_lookupRasterValues(self):
+        from rivertools.metrics import lookupRasterValues
         self.assertTrue(False)
 
     def test_dryWidth(self):
@@ -143,6 +182,8 @@ class TestVoronoiClass(unittest.TestCase):
 
     def test_createshapes(self):
         from rivertools.vor import NARVoronoi
+
+
         self.assertTrue(False)
 
 class TestGeoSmoothingClass(unittest.TestCase):
