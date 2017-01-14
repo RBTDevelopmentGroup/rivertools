@@ -77,7 +77,7 @@ def getRefElev(arr):
     """
     # TODO: What to do when the endpoints don't have depth?
     # WARNING: THIS MAY PRODUCE A DIVISION BY 0!!!!!
-    if arr.mask[0] or arr.mask[-1]:
+    if isinstance(arr, np.ma.MaskedArray) and (arr.mask[0] or arr.mask[-1]):
         fValue = 0
     else:
         fValue = np.average(arr[0] + arr[-1]) / 2

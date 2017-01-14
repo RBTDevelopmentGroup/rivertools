@@ -34,8 +34,8 @@ class TestRasterClass(unittest.TestCase):
         self.assertFalse(isclose(1.11112e-09, 1.11111e-09, rel_tol=1e-06, abs_tol=0))
 
         # Scientific notation test abs tolerance
-        self.assertTrue(isclose( 1.11112e-09, 1.11111e-09, rel_tol=1e-05, abs_tol=1e-05))
-        self.assertFalse(isclose(1.11112e-09, 1.11111e-09, rel_tol=1e-05, abs_tol=1e-06))
+        self.assertTrue(isclose( 1.11112e-09, 1.11111e-09, rel_tol=1e-06, abs_tol=1e-13))
+        self.assertFalse(isclose(1.11112e-09, 1.11111e-09, rel_tol=1e-06, abs_tol=1e-14))
 
 class TestShapeHelpers(unittest.TestCase):
 
@@ -54,7 +54,7 @@ class TestShapeHelpers(unittest.TestCase):
 
     def test_rectIntersect(self):
         from rivertools.shapes import rectIntersect
-        diag = getDiag(Polygon([(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]))
+        # diag = rectIntersect(Polygon([(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]))
         self.assertTrue(False)
 
     def test_getExtrapoledLine(self):
@@ -110,13 +110,12 @@ class TestMetricClass(unittest.TestCase):
         aDonut = Polygon([(2, 2), (3, 2), (3, 3), (2, 3), (2, 2)])
         aPolyWithDonut = aPoly.difference(aDonut)
 
-        from rivertools.plotting import Plotter
-        plt = Plotter()
-
-        # The shape of the river is grey (this is the one with only qualifying islands
-        plt.plotShape(aPolyWithDonut, '#AACCCC', 0.5, 5)
-        plt.plotShape(aLine, '#CCCCAA', 0.5, 10)
-        plt.showPlot((0, 0, 10, 10))
+        # from rivertools.plotting import Plotter
+        # plt = Plotter()
+        # # The shape of the river is grey (this is the one with only qualifying islands
+        # plt.plotShape(aPolyWithDonut, '#AACCCC', 0.5, 5)
+        # plt.plotShape(aLine, '#CCCCAA', 0.5, 10)
+        # plt.showPlot((0, 0, 10, 10))
 
         fValue = dryWidth(aLine, aPolyWithDonut)
         self.assertEqual(fValue, 3)
@@ -159,20 +158,26 @@ class TestMetricClass(unittest.TestCase):
 
     def test_getRefElev(self):
         from rivertools.metrics import getRefElev
-        self.assertTrue(False)
 
+        # Unmasked array
+        depthValues = [1, 2, 3, 4, 5]
+        self.assertEqual(getRefElev(depthValues), 3.0)
 
-    # end point on XS when XS is not precise multiple of station distance
-    # An idea for this test is get the original line length and compare with
-    # the array size multiplied by the station interval
+        # Masked Array
+        depthValues = np.ma.array([1, 2, 3, 4, 5], mask=[False, False, False, False, False])
+        self.assertEqual(getRefElev(depthValues), 3.0)
 
-    # Figure out how to handle cross sections with no data parts
+        # Masked Array with valid mask
+        depthValues = np.ma.array([1, 2, np.nan, 4, 5], mask=[False, False, True, False, False])
+        self.assertEqual(getRefElev(depthValues), 3.0)
 
-    # Which width to use for ratios... is it wetted width or total length
-
-    # Write the attributes to the shapefile
-
-
+        # Masked Array with invalid mask
+        depthValues = np.ma.array([np.nan, 2, 3, 4, 5], mask=[True, False, True, False, False])
+        self.assertEqual(getRefElev(depthValues), 0)
+        depthValues = np.ma.array([np.nan, 2, 3, 4, np.nan], mask=[False, False, True, False, True])
+        self.assertEqual(getRefElev(depthValues), 0)
+        depthValues = np.ma.array([np.nan, 2, 3, 4, np.nan], mask=[True, False, True, False, True])
+        self.assertEqual(getRefElev(depthValues), 0)
 
 class TestVoronoiClass(unittest.TestCase):
 
