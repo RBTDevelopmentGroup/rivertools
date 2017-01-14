@@ -1,8 +1,8 @@
 # RiverTools
 
-This river tools repository contains scripts for generating GIS layers that represent rivers. The current tools include scripts to layout river centerlines and cross sections. These methods were conceived in collaboration between the [United States Forest Service](https://www.fs.fed.us/rmrs/), [ESSA Technologies](http://essa.com) and [North Arrow Research](http://northarrowresearch.com). These scripts are open source.
+This river tools repository contains scripts for generating GIS layers that represent rivers. The current tools include scripts to layout river centerlines and cross sections. These methods were conceived in collaboration between the [United States Forest Service](https://www.fs.fed.us/rmrs/), [ESSA Technologies](http://essa.com) and [North Arrow Research](http://northarrowresearch.com). These scripts are licensed as open source under [GNU Version 2.0](./LICENSE). They use open source numerical and GIS libraries and read and write data using [ShapeFiles](https://en.wikipedia.org/wiki/Shapefile) and [GeoTiffs](https://en.wikipedia.org/wiki/GeoTIFF).
 
-![centerline and cross section](./centerline_crosssections.png)
+![centerline and cross section](./docs/pics/centerline_crosssections.png)
 
 The centerline and cross section scripts are both command line tools. If you just want to run the tools then refer to the Installation section below on how to use PIP. You should read the Prerequisites section and ensure that you have all the dependencies before attempting to run the tools.
 
@@ -16,6 +16,8 @@ McKean, J., Nagel, D., Tonina, D., Bailey, P., Wright, C.W., Bohn, C., Nayegandh
 
 ## Centerline
 
+The centerline tool identifies line down the middle of a channel polygon layer. It works for both single channels and channels with islands. A [thalweg](https://en.wikipedia.org/wiki/Thalweg), or some crude representation of the main thread of the channel is required. This doesn't need to be accurate and can simply be a single line that roughly approximates the flow the channel. Refer to the [centerline tool documentation](./docs/centerline) for more detail.
+
 ```sh
 usage: centerline.py [-h] [--smoothing SMOOTHING] [--noviz]
                      river thalweg islands centerline
@@ -23,7 +25,7 @@ usage: centerline.py [-h] [--smoothing SMOOTHING] [--noviz]
 positional arguments:
   river                 Path to the river shape file. Donuts will be ignored.
   thalweg               Path to the thalweg shapefile
-  islands               Path to the islands shapefile.
+  islands               Path to the islands shapefile (Optional).
   centerline            Path to the desired output centerline shapefile
 
 optional arguments:
@@ -35,6 +37,8 @@ optional arguments:
 ```
 
 ## CrossSections
+
+The cross section tool generates transects perpendicular to a longitudinal line down the channel. It is intended to be used *after* the centerline to produce cross sections down a channel, spanning to the edge of a channel polygon layer. The spacing of the cross sections is user-defined. Several common measurements are calculated and stored in the attribute table of the output cross section ShapeFile. Refer to the [cross section tool documentation](./docs/crosssections) for more detail.
 
 ```sh
 usage: crosssections.py [-h] [--noviz]
