@@ -4,7 +4,7 @@ This river tools repository contains scripts for generating GIS layers that repr
 
 ![centerline and cross section](docs/img/centerline_crosssections.png)
 
-The centerline and cross section scripts are both command line tools. If you just want to run the tools then refer to the Installation section below on how to use PIP. You should read the Prerequisites section and ensure that you have all the dependencies before attempting to run the tools.
+The centerline and cross section scripts are both command line tools. If you just want to run the tools then refer to the Installation section below on how to use [PIP](https://pypi.python.org/pypi/pip). You should read the Prerequisites section and ensure that you have all the dependencies before attempting to run the tools.
 
 ## Citation
 
