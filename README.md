@@ -38,9 +38,9 @@ optional arguments:
 
 ```
 
-## CrossSections
+## Cross Sections
 
-The cross section tool generates transects perpendicular to a longitudinal line down the channel. It is intended to be used *after* the centerline to produce cross sections down a channel, spanning to the edge of a channel polygon layer. The spacing of the cross sections is user-defined. Several common measurements are calculated and stored in the attribute table of the output cross section ShapeFile. Refer to the [cross section tool documentation](./docs/crosssections.md) for more detail.
+The cross section tool generates transects perpendicular to a longitudinal line down the channel. It is intended to be used *after* the centerline to produce cross sections down a channel, spanning to the edge of a channel polygon layer. The spacing of the cross sections is user-defined, as is the sampling distance of elevations along each cross section. Several common measurements are calculated and stored in the attribute table of the output cross section ShapeFile. Refer to the [cross section tool documentation](./docs/crosssections.md) for more detail.
 
 ```sh
 usage: crosssections.py [-h] [--noviz]
@@ -52,6 +52,8 @@ positional arguments:
   centerline     Path to the centerline shapefile
   dem            Path to the DEM Raster (used for metric calculation)
   crosssections  Path to the desired output crosssections
+  separation     Spacing between cross sections (map units)
+  stationsep     Spacing of elevation sampling along each cross section (map units)
 
 optional arguments:
   -h, --help     show this help message and exit
