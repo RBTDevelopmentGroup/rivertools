@@ -1,6 +1,7 @@
 from logger import Logger
 from raster import Raster
 import numpy as np
+from shapely.geos import TopologicalError
 from shapely.geometry import *
 import math
 
@@ -114,9 +115,13 @@ def dryWidth(xs, rivershapeWithDonuts):
     :param rivershapeWithDonuts: Polygon with non-qualifying donuts retained
     :return:
     """
-
+    log = Logger('dryWidth')
     # Get all intersects of this crosssection with the rivershape
-    intersects = xs.intersection(rivershapeWithDonuts)
+    try:
+        intersects = xs.intersection(rivershapeWithDonuts)
+    except TopologicalError as e:
+        log.error("Could not perform intersection on `rivershapeWithDonuts`. Look for small, invalid islands as a possible cause", e)
+        raise e
 
     # The intersect may be one object (LineString) or many. We have to handle both cases
     if intersects.type == "LineString":

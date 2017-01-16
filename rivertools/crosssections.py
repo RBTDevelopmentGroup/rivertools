@@ -68,24 +68,24 @@ def crosssections(args):
         # Get 50cm spaced points
         for currDist in np.arange(0, linegeo.length, args.separation):
             # Now create the cross sections with length = 2 * diag
-            xsgeos, junk = createTangentialLine(currDist, linegeo, rivershape)
+            newxs, junk = createTangentialIntersect(currDist, linegeo, rivershape)
             throwaway += junk
-            for xs in xsgeos:
-                keep = True
-                xsObj = XSObj(channelID, xs, mainChannel)
 
-                # If this is not the main channel and our cross section touches the exterior wall in
-                # more than one place then lose it
-                if not mainChannel:
-                    dista = Point(xs.coords[0]).distance(rivershape.exterior)
-                    distb = Point(xs.coords[1]).distance(rivershape.exterior)
-                    if dista < 0.001 and distb < 0.001:
-                        keep = False
+            keep = True
+            xsObj = XSObj(channelID, newxs, mainChannel)
 
-                if keep:
-                    linexs.append(xsObj)
-                else:
-                    throwaway.append(xs)
+            # If this is not the main channel and our cross section touches the exterior wall in
+            # more than one place then lose it
+            if not mainChannel:
+                dista = Point(newxs.coords[0]).distance(rivershape.exterior)
+                distb = Point(newxs.coords[1]).distance(rivershape.exterior)
+                if dista < 0.001 and distb < 0.001:
+                    keep = False
+
+            if keep:
+                linexs.append(xsObj)
+            else:
+                throwaway.append(newxs)
 
         allxslines.append(linexs)
 
@@ -170,7 +170,7 @@ def crosssections(args):
         plt.plotShape(rivershape, '#CCCCCC', 0.5, 5, 'River Shape')
 
         # Centerline is black
-        plt.plotShape(MultiLineString, '#000000', 0.5, 20, "Centerlines")
+        plt.plotShape(MultiLineString([g['geometry'] for g in centerlines]), '#000000', 0.5, 20, "Centerlines")
 
         # The valid crosssections are blue
         plt.plotShape(MultiLineString([g.geometry for g in flatxsls if g.isValid]), '#0000FF', 0.7, 25, "Valid Cross Sections")

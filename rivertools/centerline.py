@@ -23,7 +23,7 @@ def centerline(args):
 
     You can use the following paths in this repo:
 
-     "../sampledata/Visit_2425/WettedExtent.shp" "../sampledata/Visit_2425/Thalweg.shp" "../sampledata/Visit_2425/Islands.shp" "../sampledata/outputs/centerline.shp"
+    "../sampledata/Visit_2425/WettedExtent.shp" "../sampledata/Visit_2425/Islands.shp" "../sampledata/outputs/centerline.shp" "../sampledata/Visit_2425/DEM.tif" "../sampledata/outputs/crosssections.shp" 0.5 0.5
 
     :param args:
     :return:

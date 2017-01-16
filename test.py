@@ -54,12 +54,72 @@ class TestShapeHelpers(unittest.TestCase):
 
     def test_rectIntersect(self):
         from rivertools.shapes import rectIntersect
-        # diag = rectIntersect(Polygon([(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]))
+
+        poly = Polygon([(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)])
+        line = LineString([(0.3,0.3), (0.7, 0.7)])
+
         self.assertTrue(False)
 
     def test_getExtrapoledLine(self):
         from rivertools.shapes import getExtrapoledLine
-        self.assertTrue(False)
+
+        # Vertical line
+        line = LineString([(0, 0), (0, 1)])
+        newline = getExtrapoledLine(line, 0.5)
+        self.assertAlmostEqual(newline.length, 0.5, 10)
+        self.assertEqual(newline.coords[0], line.coords[1], 3)
+
+        # Horizontal line
+        line = LineString([(0,0), (1, 0)])
+        newline = getExtrapoledLine(line, 1)
+        self.assertAlmostEqual(newline.length, 1, 10)
+
+        # Diag NW
+        line = LineString([(0,0), (1, 1)])
+        newline = getExtrapoledLine(line, 1)
+        self.assertAlmostEqual(newline.length, 1, 10)
+
+        # Diag NE
+        line = LineString([(0,0), (-1, 1)])
+        newline = getExtrapoledLine(line, 1)
+        self.assertAlmostEqual(newline.length, 1, 10)
+
+        # Diag SE
+        line = LineString([(0,0), (-1, -1)])
+        newline = getExtrapoledLine(line, 1)
+        self.assertAlmostEqual(newline.length, 1, 10)
+
+        # Diag Sw
+        line = LineString([(0,0), (1, -1)])
+        newline = getExtrapoledLine(line, 1)
+        self.assertAlmostEqual(newline.length, 1, 10)
+
+    def test_createTangentialLine(self):
+        from rivertools.shapes import createTangentialLine
+        length = 2
+        line = LineString([(0, 0), (1, 1)])
+        tanline, tanpoint = createTangentialLine(math.sqrt(2)/2, line, length)
+
+        self.assertEqual(tanpoint.coords[0], (0.5, 0.5))
+        self.assertEqual(tanline.length, length*2)
+
+    def test_createTangentialIntersect(self):
+        from rivertools.shapes import createTangentialIntersect
+        line = LineString([(0, 0), (1, 1)])
+        shape = Polygon([(0, 0), (0, 2), (2, 2), (2, 0), (0, 0)])
+
+        tanline, tanpoint = createTangentialIntersect(math.sqrt(2)/2, line, shape)
+
+        # Does our shape contain the tangent line?
+        self.assertTrue(shape.contains(tanline))
+
+        # Does the tangent line have exactly two points?
+        coords = list(shape.intersection(tanline).coords)
+        self.assertEqual(len(coords), 2)
+
+        # Do those two points lie on the polygon edge?
+        self.assertEqual(shape.distance(Point(coords[0])), 0)
+        self.assertEqual(shape.distance(Point(coords[1])), 0)
 
     def test_reconnectLine(self):
         from rivertools.shapes import reconnectLine
@@ -72,6 +132,14 @@ class TestShapeHelpers(unittest.TestCase):
         """
         from rivertools.shapes import splitClockwise
         self.assertTrue(False)
+
+    def plotit(self, line, newline):
+        from rivertools.plotting import Plotter
+        plt = Plotter()
+        # The shape of the river is grey (this is the one with only qualifying islands
+        plt.plotShape(newline, '#FF0000', 0.5, 5)
+        plt.plotShape(line, '#0000FF', 0.5, 10)
+        plt.showPlot((-3, -3, 3, 3))
 
 class TestMetricClass(unittest.TestCase):
 
@@ -109,13 +177,6 @@ class TestMetricClass(unittest.TestCase):
 
         aDonut = Polygon([(2, 2), (3, 2), (3, 3), (2, 3), (2, 2)])
         aPolyWithDonut = aPoly.difference(aDonut)
-
-        # from rivertools.plotting import Plotter
-        # plt = Plotter()
-        # # The shape of the river is grey (this is the one with only qualifying islands
-        # plt.plotShape(aPolyWithDonut, '#AACCCC', 0.5, 5)
-        # plt.plotShape(aLine, '#CCCCAA', 0.5, 10)
-        # plt.showPlot((0, 0, 10, 10))
 
         fValue = dryWidth(aLine, aPolyWithDonut)
         self.assertEqual(fValue, 3)

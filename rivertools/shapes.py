@@ -90,9 +90,9 @@ class Shapefile:
         for feat in self.layer:
             self.features.append(feat)
 
-    # def __del__(self):
-    #     if self.datasource.Destroy:
-    #         self.datasource.Destroy()
+            # def __del__(self):
+            #     if self.datasource.Destroy:
+            #         self.datasource.Destroy()
 
 class RiverPoint:
 
@@ -102,56 +102,68 @@ class RiverPoint:
         self.interior = interior
         self.island = island
 
-def createTangentialLine(dist, centerline, rivershape):
-
-    # TODO: This offset method for slope is a little problematic. Would be nice to find a better slope method using shapely
-    diag = getDiag(centerline)
-    point = centerline.interpolate(dist)
-
-    offset = centerline.interpolate(dist + 0.001)
-    slope = ((point.coords[0][1] - offset.coords[0][1]) /
-             (point.coords[0][0] - offset.coords[0][0]))
-
-    # Nothing to see here. Just linear algebra
-    # Make sure to handle the infinite slope case
-    if slope == 0:
-        m = 1
-        k = diag
-    else:
-        # Negative reciprocal is the perpendicular slope
-        m = np.reciprocal(slope) * -1
-        k = diag / math.sqrt(1 + math.pow(m, 2))
-
-    # Shoot lines out in both directions using +/- k
-    xsLong = LineString([(point.coords[0][0] - k, point.coords[0][1] - k * m),
-                         (point.coords[0][0] + k, point.coords[0][1] + k * m)])
-
-    if math.isnan(xsLong.coords[0][1]):
-        print list(xsLong.coords)
+def createTangentialIntersect(dist, centerline, rivershape):
+    diag = getDiag(rivershape)
+    xsLong, point = createTangentialLine(dist, centerline, diag)
 
     # intersect the long crossection with the rivershape and see what falls out.
     intersections = rivershape.intersection(xsLong)
-    inlist = []
-    keepXs = []
-    throwaway = []
 
-    # Now we have to choose what stays and what goes
+    # The result may be a linestring or a multilinestring.
+    inlist = []
     if not intersections.is_empty:
         if intersections.type == "LineString":
             inlist = [intersections]
         elif intersections.type == "MultiLineString":
             inlist = list(intersections)
 
-        for xs in inlist:
-            keep = True
-            # Add only lines that contain the centerpoint
-            if xs.interpolate(xs.project(point)).distance(point) > 0.01:
-                keep = False
-            if keep:
-                keepXs.append(xs)
-            else:
-                throwaway.append(xs)
+    # Now we have to choose what stays and what goes
+    keepXs = None
+    throwaway = []
+    for xs in inlist:
+        keep = True
+        # Add only lines that contain the centerpoint
+        if xs.interpolate(xs.project(point)).distance(point) > 0.01:
+            keep = False
+        if keep:
+            keepXs = xs
+        else:
+            throwaway.append(xs)
+
+    # One point can only ever have one line segment
     return keepXs, throwaway
+
+def createTangentialLine(dist, centerline, length):
+    """
+    Create a tangential line at distance
+    :param dist:
+    :param point:
+    :param centerline:
+    :return:
+    """
+
+    point = centerline.interpolate(dist)
+    pt = point.coords[0]
+
+    # Find the segment we are currently in
+    seg = [centerline.coords[-1], centerline.coords[-2]]
+    for idx, coord in enumerate(centerline.coords):
+        if centerline.project(Point(coord)) > dist:
+            seg = [centerline.coords[idx], centerline.coords[idx-1]]
+            break
+
+    # The slope is rise over run of this segment
+    rise = seg[1][1] - seg[0][1]
+    run = seg[1][0] - seg[0][0]
+
+    theta = math.atan2(rise, run)
+    perptheta = theta + math.pi/2
+
+    return LineString([(
+        pt[0] + length * math.cos(perptheta),
+        pt[1] + length * math.sin(perptheta)),
+        (pt[0] - length * math.cos(perptheta),
+         pt[1] - length * math.sin(perptheta))]), point
 
 def getBufferedBounds(shape, buffer):
     """
@@ -194,7 +206,8 @@ def rectIntersect(line, poly):
 
 def getExtrapoledLine(line, length):
     """
-    Creates a line extrapoled in p1->p2 direction' by an arbitrary length
+    Creates a line extrapoled in p1->p2 direction' (starting at p2)
+    by an arbitrary length
     :param line:
     :param length:
     :return:
@@ -202,19 +215,13 @@ def getExtrapoledLine(line, length):
     p1 = line.coords[0]
     p2 = line.coords[1]
 
-    m = (p2[1] - p1[1]) / (p2[0] - p1[0])
-    k = length / math.sqrt(1 + math.pow(m, 2))
+    rise = (p2[1] - p1[1])
+    run = (p2[0] - p1[0])
 
-    # It could be +/- k so we have to try both
-    # TODO: This needs to be tested CAREFULLY. Might only work for this quadrant config
-    if  (p2[1] - p1[1]) < 0 and  (p2[0] - p1[0]) < 0:
-        k = k * -1
+    theta = math.atan2(rise, run)
 
-    newX = p1[0] + k
-    newY = p1[1] + k*m
-
-    test = LineString([p2, (newX, newY)])
-    test1 = LineString([p1, (newX, newY)])
+    newX = p2[0] + length * math.cos(theta)
+    newY = p2[1] + length * math.sin(theta)
 
     return LineString([p2, (newX, newY)])
 
