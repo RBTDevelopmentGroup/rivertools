@@ -5,60 +5,55 @@ from shapely.geos import TopologicalError
 from shapely.geometry import *
 import math
 
-def calcMetrics(xsobjList, rivershapeWithDonuts, sDEM, fStationInterval):
+def calcXSMetrics(xs, rivershapeWithDonuts, dem, fStationInterval):
     """
     Calculate metrics for a list of cross sections
-    :param xsobjList:
-    :param rivershapeWithDonuts:
-    :param sDEM:
-    :param fStationInterval:
+    :param xs: The cross section to generate metrics from
+    :param rivershapeWithDonuts: The original rivershape file with donuts
+    :param dem: Raster object
+    :param fStationInterval: some interval (float)
     :return:
     """
-    log = Logger('Metrics')
-    dem = Raster(sDEM)
+    regularPoints = interpolateRasterAlongLine(xs.geometry, fStationInterval)
+    arrRaw = lookupRasterValues(regularPoints, dem)
 
-    log.info("Calculating metrics for all crosssections")
-    for xs in xsobjList:
-        regularPoints = interpolateRasterAlongLine(xs.geometry, fStationInterval)
-        arrRaw = lookupRasterValues(regularPoints, dem)
+    # Get the reference Elevation from the edges
+    refElev = getRefElev(arrRaw)
 
-        # Get the reference Elevation from the edges
-        refElev = getRefElev(arrRaw)
+    xsmXSLength = xs.geometry.length
+    xsmWetWidth = dryWidth(xs.geometry, rivershapeWithDonuts)
+    xsmDryWidth = xsmXSLength - xsmWetWidth
 
-        xsmXSLength = xs.geometry.length
-        xsmWetWidth = dryWidth(xs.geometry, rivershapeWithDonuts)
-        xsmDryWidth = xsmXSLength - xsmWetWidth
+    if refElev == 0:
+        xs.isValid = False
+        xsmMaxDepth = 0
+        xsmMeanDepth = 0
+        xsmW2MxDepth = 0
+        xsmW2AvDepth = 0
+    else:
+        # The depth array must be calculated
+        deptharr = refElev - arrRaw
 
-        if refElev == 0:
-            xs.isValid = False
-            xsmMaxDepth = 0
-            xsmMeanDepth = 0
-            xsmW2MxDepth = 0
-            xsmW2AvDepth = 0
-        else:
-            # The depth array must be calculated
-            deptharr = refElev - arrRaw
+        xsmMaxDepth = maxDepth(deptharr)
+        xsmMeanDepth = meanDepth(deptharr)
 
-            xsmMaxDepth = maxDepth(deptharr)
-            xsmMeanDepth = meanDepth(deptharr)
+        xsmW2MxDepth = xsmWetWidth / xsmMaxDepth if not xsmMaxDepth == 0.0 else 0.0
+        xsmW2AvDepth = xsmWetWidth / xsmMeanDepth if not xsmMeanDepth == 0.0 else 0.0
 
-            xsmW2MxDepth = xsmWetWidth / xsmMaxDepth if not xsmMaxDepth == 0.0 else 0.0
-            xsmW2AvDepth = xsmWetWidth / xsmMeanDepth if not xsmMeanDepth == 0.0 else 0.0
-
-        # Make sure that everything has a value
-        xs.metrics = {
-            "XSLength": metricSanitize(xsmXSLength),
-            "WetWidth": metricSanitize(xsmWetWidth),
-            "DryWidth": metricSanitize(xsmDryWidth),
-            "MaxDepth": metricSanitize(xsmMaxDepth),
-            "MeanDepth": metricSanitize(xsmMeanDepth),
-            "W2MxDepth": metricSanitize(xsmW2MxDepth),
-            "W2AvDepth": metricSanitize(xsmW2AvDepth),
-            "BFElev": metricSanitize(refElev),
-            "BFArea": 0,
-            "HRadius": 0,
-            "NumStat":0
-        }
+    # Make sure that everything has a value
+    xs.metrics = {
+        "XSLength": metricSanitize(xsmXSLength),
+        "WetWidth": metricSanitize(xsmWetWidth),
+        "DryWidth": metricSanitize(xsmDryWidth),
+        "MaxDepth": metricSanitize(xsmMaxDepth),
+        "MeanDepth": metricSanitize(xsmMeanDepth),
+        "W2MxDepth": metricSanitize(xsmW2MxDepth),
+        "W2AvDepth": metricSanitize(xsmW2AvDepth),
+        "BFElev": metricSanitize(refElev),
+        "BFArea": 0,
+        "HRadius": 0,
+        "NumStat":0
+    }
 
 def metricSanitize(metric):
     """

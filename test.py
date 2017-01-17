@@ -12,6 +12,7 @@ class TestRasterClass(unittest.TestCase):
     """
     def test_getPixelVal(self):
         from rivertools.raster import Raster
+        # TODO: Implement TEST
         self.assertTrue(False)
 
     def test_isClose(self):
@@ -53,6 +54,7 @@ class TestShapeHelpers(unittest.TestCase):
         self.assertEqual(diag, math.sqrt(2))
 
     def test_rectIntersect(self):
+        # TODO: Implement TEST
         from rivertools.shapes import rectIntersect
 
         poly = Polygon([(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)])
@@ -123,6 +125,7 @@ class TestShapeHelpers(unittest.TestCase):
 
     def test_reconnectLine(self):
         from rivertools.shapes import reconnectLine
+        # TODO: Implement TEST
         self.assertTrue(False)
 
     def test_splitClockwise(self):
@@ -131,6 +134,7 @@ class TestShapeHelpers(unittest.TestCase):
         :return:
         """
         from rivertools.shapes import splitClockwise
+        # TODO: Implement TEST
         self.assertTrue(False)
 
     def test_bisectLineSearch(self):
@@ -189,6 +193,7 @@ class TestMetricClass(unittest.TestCase):
         self.assertEqual(len(points), 7)
 
     def test_lookupRasterValues(self):
+        # TODO: Implement TEST
         from rivertools.metrics import lookupRasterValues
         self.assertTrue(False)
 
@@ -209,8 +214,6 @@ class TestMetricClass(unittest.TestCase):
 
         fValue = dryWidth(aLine, aPolyWithDonut)
         self.assertEqual(fValue, 3)
-
-        self.assertTrue(False)
 
     def test_meanDepth(self):
         from rivertools.metrics import meanDepth
@@ -273,12 +276,12 @@ class TestVoronoiClass(unittest.TestCase):
 
     def test_collectCenterLines(self):
         from rivertools.vor import NARVoronoi
+        # TODO: Implement TEST
         self.assertTrue(False)
 
     def test_createshapes(self):
         from rivertools.vor import NARVoronoi
-
-
+        # TODO: Implement TEST
         self.assertTrue(False)
 
 class TestGeoSmoothingClass(unittest.TestCase):

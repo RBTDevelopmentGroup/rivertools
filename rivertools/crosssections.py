@@ -110,8 +110,11 @@ def crosssections(args):
     # Metric Calculation
     # --------------------------------------------------------
     # Flatten the list
-    flatxsls = [xs for xslist in allxslines for xs in xslist]
-    calcMetrics(flatxsls, polyRiverShape, args.dem.name, args.stationsep)
+    log.info("Calculating metrics for all crosssections")
+    flatxsl = [xs for xslist in allxslines for xs in xslist]
+    dem = Raster(args.dem.name)
+    for xs in flatxsl:
+        calcXSMetrics(xs, polyRiverShape, dem, args.stationsep)
 
     # --------------------------------------------------------
     # Write the output Shapefile
@@ -129,10 +132,10 @@ def crosssections(args):
     # fields that are defined during XS creation. These are things like file paths etc.
     AddMetaFields(outShape)
 
-    for metricName, metricValue in flatxsls[0].metrics.iteritems():
+    for metricName, metricValue in flatxsl[0].metrics.iteritems():
         outShape.createField(metricName, ogr.OFTReal)
 
-    for idx, xs in enumerate(flatxsls):
+    for idx, xs in enumerate(flatxsl):
         featureDefn = outShape.layer.GetLayerDefn()
         outFeature = ogr.Feature(featureDefn)
         ogrLine = ogr.CreateGeometryFromJson(json.dumps(mapping(xs.geometry)))
@@ -173,10 +176,10 @@ def crosssections(args):
         plt.plotShape(MultiLineString([g['geometry'] for g in centerlines]), '#000000', 0.5, 20, "Centerlines")
 
         # The valid crosssections are blue
-        plt.plotShape(MultiLineString([g.geometry for g in flatxsls if g.isValid]), '#0000FF', 0.7, 25, "Valid Cross Sections")
+        plt.plotShape(MultiLineString([g.geometry for g in flatxsl if g.isValid]), '#0000FF', 0.7, 25, "Valid Cross Sections")
 
         # Invalid crosssections are orange
-        plt.plotShape(MultiLineString([g.geometry for g in flatxsls if not g.isValid]), '#00FF00', 0.7, 25, "Invalid Cross Sections")
+        plt.plotShape(MultiLineString([g.geometry for g in flatxsl if not g.isValid]), '#00FF00', 0.7, 25, "Invalid Cross Sections")
 
         # Throwaway lines (the ones that are too whack to even test for validity) are faded red
         plt.plotShape(MultiLineString(throwaway), '#FF0000', 0.3, 20, "Throwaway Lines (not stored)")
