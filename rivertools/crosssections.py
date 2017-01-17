@@ -119,7 +119,6 @@ def crosssections(args):
     # --------------------------------------------------------
     # Write the output Shapefile
     # --------------------------------------------------------
-    # TODO: I'd love to abstract all this away but it's a pain to do this in a generic way
     log.info("Writing Shapefiles...")
     outShape = Shapefile()
     outShape.create(args.crosssections, rivershp.spatialRef, geoType=ogr.wkbLineString)

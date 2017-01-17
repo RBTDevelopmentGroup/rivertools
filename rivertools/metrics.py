@@ -72,8 +72,6 @@ def getRefElev(arr):
     :param arr: Masked array
     :return:
     """
-    # TODO: What to do when the endpoints don't have depth?
-    # WARNING: THIS MAY PRODUCE A DIVISION BY 0!!!!!
     if isinstance(arr, np.ma.MaskedArray) and (arr.mask[0] or arr.mask[-1]):
         fValue = 0
     else:
