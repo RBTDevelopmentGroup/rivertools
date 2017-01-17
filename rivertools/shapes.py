@@ -164,19 +164,29 @@ def createTangentialLine(dist, centerline, length):
         (pt[0] - length * math.cos(perptheta),
          pt[1] - length * math.sin(perptheta))]), point
 
+
 def bisectLineSearch(dist, line):
     """
-    Use a bisect approach to get the line we're looking for
-    :param point:
-    :param line:
-    :return: index along the line
+    Use a bisect approach to get the index of the start of the line segment that contains
+    the distance specified.
+
+    for example:
+        line = [ (0,0), (0,4), (0,7), (0,10)
+        for dist = 0 returns 0
+        for dust = 3.5 returns 0
+        for dist = 4.2 returns 2
+        for dist = 7.5 returns 3
+        for dist = 10 returns 9 (endpoint condition)
+    :param dist: The distance along the line
+    :param line: The line in question
+    :return: index along the line just before we encounter 'dist' length
     """
     arr = list(line.coords)
-
 
     def _recurse(idx, ss, count=1):
         # These are the expensive calls. We want to do them as little as possible.
         pt = Point(arr[idx])
+        # Past a certain point we start decrementing instead of halving
         newss = ss / 2 if ss > 3 else ss - 1
         proj = line.project(pt)
         dir = 1 if proj < dist else -1
@@ -190,7 +200,10 @@ def bisectLineSearch(dist, line):
             return _recurse(int(idx + newss * dir), newss, count+1)
 
     maxind = len(arr)-1
-    return _recurse(maxind, maxind)
+    lineind = _recurse(maxind, maxind)
+    # Note: we've got an endpoint condition here. If we're at the end of the line
+    # just return the last point so we can make a valid line segment out of it.
+    return lineind if lineind < maxind else lineind -1
 
 
 def getBufferedBounds(shape, buffer):

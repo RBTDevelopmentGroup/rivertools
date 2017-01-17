@@ -7,10 +7,11 @@ import math
 
 def calcMetrics(xsobjList, rivershapeWithDonuts, sDEM, fStationInterval):
     """
-    Jhu Li: Do the thing!!!!!!
-    :param validXS: List of centerlines, each contains a list of cross sections on that centerline. Each cross section is XSObj that has member Shapely Line and empty member dict for metrics
-    :param rivershape:
+    Calculate metrics for a list of cross sections
+    :param xsobjList:
+    :param rivershapeWithDonuts:
     :param sDEM:
+    :param fStationInterval:
     :return:
     """
     log = Logger('Metrics')
