@@ -133,6 +133,31 @@ class TestShapeHelpers(unittest.TestCase):
         from rivertools.shapes import splitClockwise
         self.assertTrue(False)
 
+    def test_bisectLineSearch(self):
+        """
+        This method was written to speed up line searching
+        :param line:
+        :return:
+        """
+        from rivertools.shapes import bisectLineSearch
+
+        # Create the line (it's a straight line)
+        line = LineString([(0, x) for x in range(0, 101, 1)])
+        lc = list(line.coords)
+
+        # Test 90 points including the ends
+        for d in np.linspace(0, 100, 90, True):
+            r = bisectLineSearch(d, line)
+            exp = int(math.floor(d))
+            self.assertTrue(exp == r, "Failed Result: dist:{0} expected: {1}  Got:{2}\n".format(round(d, 3), exp, r))
+
+        # Test 20 points including the ends
+        for d in np.linspace(20, 30, 20, True):
+            r = bisectLineSearch(d, line)
+            exp = int(math.floor(d))
+            self.assertTrue(exp == r, "Failed Result: dist:{0} expected: {1}  Got:{2}\n".format(round(d, 3), exp, r))
+
+
     def plotit(self, line, newline):
         from rivertools.plotting import Plotter
         plt = Plotter()

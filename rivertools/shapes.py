@@ -5,9 +5,10 @@ import ogr
 import numpy as np
 from logger import Logger
 from shapely.geometry import *
+from shapely.ops import nearest_points
+from bisect import bisect_left
 
 ogr.UseExceptions()
-
 # --------------------------------------------------------
 # Load the Shapefiles we need
 # --------------------------------------------------------
@@ -145,16 +146,14 @@ def createTangentialLine(dist, centerline, length):
     point = centerline.interpolate(dist)
     pt = point.coords[0]
 
-    # Find the segment we are currently in
-    seg = [centerline.coords[-1], centerline.coords[-2]]
-    for idx, coord in enumerate(centerline.coords):
-        if centerline.project(Point(coord)) > dist:
-            seg = [centerline.coords[idx], centerline.coords[idx-1]]
-            break
+    coords = list(centerline.coords)
+
+    segind = bisectLineSearch(dist, centerline)
+    seg = LineString([coords[segind], coords[segind+1]])
 
     # The slope is rise over run of this segment
-    rise = seg[1][1] - seg[0][1]
-    run = seg[1][0] - seg[0][0]
+    rise = seg.coords[1][1] - seg.coords[0][1]
+    run = seg.coords[1][0] - seg.coords[0][0]
 
     theta = math.atan2(rise, run)
     perptheta = theta + math.pi/2
@@ -164,6 +163,35 @@ def createTangentialLine(dist, centerline, length):
         pt[1] + length * math.sin(perptheta)),
         (pt[0] - length * math.cos(perptheta),
          pt[1] - length * math.sin(perptheta))]), point
+
+def bisectLineSearch(dist, line):
+    """
+    Use a bisect approach to get the line we're looking for
+    :param point:
+    :param line:
+    :return: index along the line
+    """
+    arr = list(line.coords)
+
+
+    def _recurse(idx, ss, count=1):
+        # These are the expensive calls. We want to do them as little as possible.
+        pt = Point(arr[idx])
+        newss = ss / 2 if ss > 3 else ss - 1
+        proj = line.project(pt)
+        dir = 1 if proj < dist else -1
+
+        # Return if we've run out of steps or we've found the culprit
+        if proj == dist:
+            return idx
+        elif ss <= 0:
+            return idx if dir > 0 else idx - 1
+        else:
+            return _recurse(int(idx + newss * dir), newss, count+1)
+
+    maxind = len(arr)-1
+    return _recurse(maxind, maxind)
+
 
 def getBufferedBounds(shape, buffer):
     """
