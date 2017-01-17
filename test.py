@@ -183,15 +183,6 @@ class TestShapeHelpers(unittest.TestCase):
         self.assertEqual(bisectLineSearch(0.0, line), 0)
         self.assertEqual(bisectLineSearch(100.0, line), 99)
 
-
-    def plotit(self, line, newline):
-        from rivertools.plotting import Plotter
-        plt = Plotter()
-        # The shape of the river is grey (this is the one with only qualifying islands
-        plt.plotShape(newline, '#FF0000', 0.5, 5)
-        plt.plotShape(line, '#0000FF', 0.5, 10)
-        plt.showPlot((-3, -3, 3, 3))
-
 class TestMetricClass(unittest.TestCase):
 
     def test_interpolateRasterAlongLine(self):
