@@ -34,7 +34,7 @@ setup(
       install_requires=install_requires,
       entry_points={
             "console_scripts": ['centerline = rivertools.centerline:main',
-                                'crosssections = rivertools.centerline:main']
+                                'crosssections = rivertools.crosssections:main']
       },
       version=version,
       long_description=long_descr,
