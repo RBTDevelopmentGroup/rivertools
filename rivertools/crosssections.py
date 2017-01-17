@@ -9,6 +9,7 @@ from logger import Logger
 from metrics import *
 from os import path
 from datetime import datetime
+import itertools
 from time import strftime
 
 def crosssections(args):
@@ -106,16 +107,10 @@ def crosssections(args):
     log.info("Testin XSs for Validity...")
 
     for linexs in allxslines:
+        xsValueValidate(linexs)
 
-        lengths = [xs.geometry.length for xs in linexs]
-        stdev = np.std(lengths)
-        mean = np.mean(lengths)
+    xsOverlapValidate(allxslines)
 
-        # Test each cross section for validity.
-        # TODO: Right now it's just stddev test. There should probably be others
-        for idx, xsobj in enumerate(linexs):
-            isValid = not xsobj.geometry.length > (mean + 4 * stdev)
-            xsobj.isValid = isValid
 
     # --------------------------------------------------------
     # Metric Calculation
@@ -262,6 +257,41 @@ def AddMetaFields(outShape):
 
     # Lateral spacing of stations along a cross section
     outShape.createField("StatSep", ogr.OFTReal)
+
+def xsValueValidate(linexs):
+    """
+    Validate each XS in a line based on the average stats
+    for that line
+    :param linexs:
+    :return:
+    """
+    lengths = [xs.geometry.length for xs in linexs]
+    stdev = np.std(lengths)
+    mean = np.mean(lengths)
+
+    # Test each cross section for validity.
+    # TODO: Right now it's just stddev test. There should probably be others
+    for idx, xsobj in enumerate(linexs):
+        isValid = not xsobj.geometry.length > (mean + 4 * stdev)
+        xsobj.isValid = isValid
+
+
+def xsOverlapValidate(allxslines):
+    """
+    See if any
+    :return: Nothing. This edits in place.
+    """
+    # Loop over lines
+    for linecombo in itertools.combinations(allxslines,2):
+        xslist0 = [xs for xs in linecombo[0] if xs.isValid]
+        xslist1 = [xs for xs in linecombo[1] if xs.isValid]
+
+        for xs in xslist0:
+            for xsTest in xslist1:
+                if xs.geometry.intersects(xsTest.geometry):
+                    xs.isValid = False
+                    xsTest.isValid = False
+
 
 def main():
 

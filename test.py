@@ -55,7 +55,6 @@ class TestShapeHelpers(unittest.TestCase):
         self.assertEqual(diag, math.sqrt(2))
 
     def test_projToShape(self):
-        # TODO: Implement TEST
         from rivertools.shapes import projToShape
 
         poly = Polygon([(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)])
