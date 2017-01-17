@@ -2,6 +2,7 @@ from shapely.geometry import *
 import argparse
 import sys
 import numpy as np
+from raster import Raster
 from shapes import *
 from plotting import Plotter
 from logger import Logger
@@ -44,6 +45,11 @@ def crosssections(args):
     log.info("Combining exterior and qualifying islands...")
     rivershape = Polygon(polyRiverShape.exterior).difference(multipolIslands)
 
+    pointcloud = {
+        "stationsep": [],
+        "separation": []
+    }
+
     # --------------------------------------------------------
     # Traverse the line(s)
     # --------------------------------------------------------
@@ -68,8 +74,13 @@ def crosssections(args):
         # Get 50cm spaced points
         for currDist in np.arange(0, linegeo.length, args.separation):
             # Now create the cross sections with length = 2 * diag
-            newxs, junk = createTangentialIntersect(currDist, linegeo, rivershape)
+            newxs, junk, pt = createTangentialIntersect(currDist, linegeo, rivershape)
             throwaway += junk
+
+            # If the points flag is set we add this point to a dictionary for later
+            # Writing to the shp file
+            if args.points:
+                pointcloud['separation'].append(pt)
 
             keep = True
             xsObj = XSObj(channelID, newxs, mainChannel)
@@ -113,13 +124,18 @@ def crosssections(args):
     log.info("Calculating metrics for all crosssections")
     flatxsl = [xs for xslist in allxslines for xs in xslist]
     dem = Raster(args.dem.name)
-    for xs in flatxsl:
-        calcXSMetrics(xs, polyRiverShape, dem, args.stationsep)
+    for idx, xs in enumerate(flatxsl):
+        ptsdict = calcXSMetrics(xs, polyRiverShape, dem, args.stationsep)
+        # Add all station points to stationsep for writing to the shapefile
+        if args.points:
+            ptsdict['xsid'] = idx
+            pointcloud['stationsep'].append(ptsdict)
+
 
     # --------------------------------------------------------
     # Write the output Shapefile
     # --------------------------------------------------------
-    log.info("Writing Shapefiles...")
+    log.info("Writing XSs to Shapefiles...")
     outShape = Shapefile()
     outShape.create(args.crosssections, rivershp.spatialRef, geoType=ogr.wkbLineString)
 
@@ -160,6 +176,40 @@ def crosssections(args):
                 log.error("OGR SetField Error", e)
 
         outShape.layer.CreateFeature(outFeature)
+
+    if args.points:
+        log.info("Writing Points...")
+        outShape = Shapefile()
+        newname = "{0}_points.shp".format(os.path.splitext(args.crosssections)[0])
+        outShape.create(newname, rivershp.spatialRef, geoType=ogr.wkbPoint)
+
+        outShape.createField("ID", ogr.OFTInteger)
+        outShape.createField("xsID", ogr.OFTInteger)
+        outShape.createField("type", ogr.OFTString)
+        outShape.createField("val", ogr.OFTReal)
+
+        featureDefn = outShape.layer.GetLayerDefn()
+        for idx, xspts in enumerate(pointcloud['stationsep']):
+            for idy, pt in enumerate(xspts['points']):
+                outFeature = ogr.Feature(featureDefn)
+                ogrPt = ogr.CreateGeometryFromJson(json.dumps(mapping(pt)))
+                outFeature.SetGeometry(ogrPt)
+                outFeature.SetField("ID", int(idx))
+                outFeature.SetField("val", float(xspts['values'][idy]))
+                outFeature.SetField("type", "stationsep")
+                outFeature.SetField("xsID", int(xspts['xsid']))
+                outShape.layer.CreateFeature(outFeature)
+
+        for idx, pt in enumerate(pointcloud['separation']):
+            outFeature = ogr.Feature(featureDefn)
+            ogrPt = ogr.CreateGeometryFromJson(json.dumps(mapping(pt)))
+            outFeature.SetGeometry(ogrPt)
+            outFeature.SetField("ID", int(idx))
+            outFeature.SetField("type", "separation")
+            outFeature.SetField("val", 0)
+            outFeature.SetField("xsID", idx)
+            outShape.layer.CreateFeature(outFeature)
+
 
     # --------------------------------------------------------
     # Do a little show and tell with plotting and whatnot
@@ -239,6 +289,10 @@ def main():
     parser.add_argument('stationsep',
                         type=float,
                         help='Lateral spacing between vertical DEM measurements')
+    parser.add_argument('--points',
+                        help = 'Generate points at separation and stationsep (slower)',
+                        action='store_true',
+                        default=False)
     parser.add_argument('--noviz',
                         help = 'Disable result visualization (faster)',
                         action='store_true',

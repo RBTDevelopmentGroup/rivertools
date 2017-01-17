@@ -73,8 +73,8 @@ def centerline(args):
     rivershapeBounds = getBufferedBounds(rivershape, 10)
 
     # Now see where the lines intersect the bounding rectangle
-    thalwegStartExt = rectIntersect(thalwegStart, rivershapeBounds)
-    thalwegEndExt = rectIntersect(thalwegEnd, rivershapeBounds)
+    thalwegStartExt = projToShape(thalwegStart, rivershapeBounds)
+    thalwegEndExt = projToShape(thalwegEnd, rivershapeBounds)
 
     # Now make a NEW thalweg by adding the extension points to the start
     # and end points of the original

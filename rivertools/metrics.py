@@ -1,5 +1,4 @@
 from logger import Logger
-from raster import Raster
 import numpy as np
 from shapely.geos import TopologicalError
 from shapely.geometry import *
@@ -15,10 +14,11 @@ def calcXSMetrics(xs, rivershapeWithDonuts, dem, fStationInterval):
     :return:
     """
     regularPoints = interpolateRasterAlongLine(xs.geometry, fStationInterval)
-    arrRaw = lookupRasterValues(regularPoints, dem)
+    # Augment these points with values from the raster
+    ptsdict = lookupRasterValues(regularPoints, dem)
 
     # Get the reference Elevation from the edges
-    refElev = getRefElev(arrRaw)
+    refElev = getRefElev(ptsdict['values'])
 
     xsmXSLength = xs.geometry.length
     xsmWetWidth = dryWidth(xs.geometry, rivershapeWithDonuts)
@@ -32,7 +32,7 @@ def calcXSMetrics(xs, rivershapeWithDonuts, dem, fStationInterval):
         xsmW2AvDepth = 0
     else:
         # The depth array must be calculated
-        deptharr = refElev - arrRaw
+        deptharr = refElev - ptsdict['values']
 
         xsmMaxDepth = maxDepth(deptharr)
         xsmMeanDepth = meanDepth(deptharr)
@@ -54,6 +54,7 @@ def calcXSMetrics(xs, rivershapeWithDonuts, dem, fStationInterval):
         "HRadius": 0,
         "NumStat":0
     }
+    return ptsdict
 
 def metricSanitize(metric):
     """
@@ -145,8 +146,12 @@ def lookupRasterValues(points, raster):
     :param raster:
     :return:
     """
-    vals = [raster.getPixelVal(pt.coords[0]) for pt in points]
-    # Mask out the np.nan values
-    arrMasked = np.ma.masked_invalid(vals)
+    pointsdict = { "points": points, "values": [] }
 
-    return arrMasked
+    for pt in pointsdict['points']:
+        pointsdict['values'].append(raster.getPixelVal(pt.coords[0]))
+
+    # Mask out the np.nan values
+    pointsdict['values'] = np.ma.masked_invalid(pointsdict['values'])
+
+    return pointsdict

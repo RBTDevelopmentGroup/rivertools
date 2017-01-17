@@ -6,7 +6,6 @@ import numpy as np
 from logger import Logger
 from shapely.geometry import *
 from shapely.ops import nearest_points
-from bisect import bisect_left
 
 ogr.UseExceptions()
 # --------------------------------------------------------
@@ -132,7 +131,7 @@ def createTangentialIntersect(dist, centerline, rivershape):
             throwaway.append(xs)
 
     # One point can only ever have one line segment
-    return keepXs, throwaway
+    return keepXs, throwaway, point
 
 def createTangentialLine(dist, centerline, length):
     """
@@ -233,12 +232,14 @@ def getDiag(rect):
         math.pow((rect.bounds[3] - rect.bounds[1]), 2) +
         math.pow((rect.bounds[2] - rect.bounds[0]), 2))
 
-def rectIntersect(line, poly):
+def projToShape(line, poly):
     """
-    Return the intersection point between a line segment and a polygon
+    Project the line to the edge of the shape. This is used to connect the
+    thalweg with the boundary polygon. It returns a line segment that is
+    the projection from the end of the line to the polygon
     :param line: Note, the direction is important so we use a list of tuples
-    :param poly:
-    :return:
+    :param poly: A polygon object
+    :return: a line segment
     """
     diag = getDiag(poly)
     longLine = getExtrapoledLine(line, diag)
