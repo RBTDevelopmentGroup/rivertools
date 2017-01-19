@@ -117,8 +117,23 @@ def centerline(args):
         centerlineSmooth = centerline
 
     # Trim to be inside the river shape.
-    # TODO: Is this dangerous? Maybe.... Might want to do a bit of testing
-    centerlineSmooth = centerlineSmooth.intersection(rivershape)
+    centerlineChopped = centerlineSmooth
+    centerlineIntersection = centerlineSmooth.intersection(rivershape)
+    # It it's a multiline string that means it crosses over the channel at some point
+    if centerlineIntersection.type == "MultiLineString":
+        log.error("Centerline Crosses Channel Boundary. Continuing...")
+        # Get the start and endpoints
+        startdist = centerlineSmooth.project(centerlineIntersection[0].coords[0])
+        enddist = centerlineSmooth.project(centerlineIntersection[-1].coords[-1])
+        pts = []
+        for pt in centerlineSmooth.coords:
+            if centerlineSmooth.project(pt) >= startdist and centerlineSmooth.project(pt) <= enddist:
+                pts.append(pt)
+        centerlineChopped = LineString(centerlineSmooth)
+    else:
+        # If it's just a linestring then we can safely use it
+        centerlineChopped = centerlineIntersection
+
 
     # Now we've got the main centerline let's flip the islands one by one
     # and get alternate lines
@@ -137,7 +152,7 @@ def centerline(args):
 
                 # Now we reconnect the bit that is different with the smoothed
                 # Segment since smoothing can mess up the intersection
-                reconLine = reconnectLine(centerlineSmooth, smoothAlt)
+                reconLine = reconnectLine(centerlineChopped, smoothAlt)
             else:
                 reconLine = diffaltline
 
@@ -156,7 +171,7 @@ def centerline(args):
     # The main centerline gets written first
     featureDefn = outShape.layer.GetLayerDefn()
     outFeature = ogr.Feature(featureDefn)
-    ogrmultiline = ogr.CreateGeometryFromJson(json.dumps(mapping(centerlineSmooth)))
+    ogrmultiline = ogr.CreateGeometryFromJson(json.dumps(mapping(centerlineChopped)))
     outFeature.SetGeometry(ogrmultiline)
     featureID = 1
     outFeature.SetField('ID', featureID)
@@ -191,15 +206,15 @@ def centerline(args):
         plt.plotShape(bankshapes[1], '#AAAAFF', 0.5, 5)
 
         # The rivershape is slightly green
-        # plt.plotShape(rivershape, '#AACCAA', 0.5, 8, 'River')
-        plt.plotShape(smoothRiver, '#AAAACC', 0.2, 10, 'SmoothRiver')
+        plt.plotShape(rivershape, '#AACCAA', 0.5, 8, 'River')
+        plt.plotShape(smoothRiver, '#AAAACC', 0.5, 10, 'SmoothRiver')
 
         # Thalweg is green and where it extends to the bounding rectangle is orange
         plt.plotShape(newThalweg, '#FFA500', 1, 15, 'Thalweg Extension')
         plt.plotShape(lineThalweg, '#00FF00', 1, 20, 'Thalweg')
 
         # The centerline we choose is bright red
-        plt.plotShape(centerlineSmooth, '#FF0000', 0.8, 30, 'Centerline')
+        plt.plotShape(centerlineChopped, '#FF0000', 0.8, 30, 'Centerline')
 
         # The alternate lines are in yellow
         plt.plotShape(MultiLineString(alternateLines), '#FFFF00', 0.8, 25, 'Side-Channel Line')

@@ -5,7 +5,6 @@ import ogr
 import numpy as np
 from logger import Logger
 from shapely.geometry import *
-from shapely.ops import nearest_points
 
 ogr.UseExceptions()
 # --------------------------------------------------------
