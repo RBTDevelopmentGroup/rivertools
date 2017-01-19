@@ -220,6 +220,7 @@ def crosssections(args):
     # --------------------------------------------------------
     if not args.noviz:
         log.info("Plotting Results...")
+
         plt = Plotter()
 
         # The shape of the river is grey (this is the one with only qualifying islands
@@ -237,7 +238,12 @@ def crosssections(args):
         # Throwaway lines (the ones that are too whack to even test for validity) are faded red
         plt.plotShape(MultiLineString(throwaway), '#FF0000', 0.3, 20, "Throwaway Lines (not stored)")
 
-        plt.showPlot(getBufferedBounds(rivershape, 10).bounds)
+        bounds = getBufferedBounds(rivershape, 10).bounds
+        if 'savepng' in args and len(args.savepng) > 0:
+            plt.savePlot(args.savepng, bounds)
+        else:
+            plt.showPlot(bounds)
+
 
 def AddMetaFields(outShape):
 
@@ -332,6 +338,10 @@ def main():
     parser.add_argument('islands',
                         help='Path to the islands shapefile (None by default).',
                         type=argparse.FileType('r'))
+    parser.add_argument('--savepng',
+                        type=str,
+                        default=0,
+                        help='Provide a path to save the plot to a png')
     parser.add_argument('--points',
                         help = 'Generate points at separation and stationsep (slower)',
                         action='store_true',

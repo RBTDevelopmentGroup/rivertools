@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from shapely.geometry import *
 from matplotlib.collections import PolyCollection
 from descartes import PolygonPatch
+import os
 
 class Plotter:
 
@@ -48,10 +49,20 @@ class Plotter:
             self.ax.add_collection(coll)
 
     @staticmethod
-    def showPlot(bounds=None):
+    def savePlot(path, bounds=None):
+        if bounds is not None:
+            plt.ylim(bounds[1], bounds[3])
+            plt.xlim(bounds[0], bounds[2])
+        plt.autoscale(enable=False)
+        plt.legend(loc='best')
+        plt.savefig(path)
+
+    @staticmethod
+    def showPlot(self, bounds=None):
         if bounds is not None:
             plt.ylim(bounds[1], bounds[3])
             plt.xlim(bounds[0], bounds[2])
         plt.autoscale(enable=False)
         plt.legend(loc='best')
         plt.show()
+        return

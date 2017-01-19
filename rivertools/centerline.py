@@ -193,6 +193,7 @@ def centerline(args):
     # --------------------------------------------------------
     if not args.noviz:
         log.info("Plotting Results...")
+
         plt = Plotter()
 
         # (OPTIONAL). Makes the polygons we will use to visualize
@@ -219,7 +220,11 @@ def centerline(args):
         # The alternate lines are in yellow
         plt.plotShape(MultiLineString(alternateLines), '#FFFF00', 0.8, 25, 'Side-Channel Line')
 
-        plt.showPlot(getBufferedBounds(rivershapeBounds, 10).bounds)
+        bounds = getBufferedBounds(rivershapeBounds, 10).bounds
+        if 'savepng' in args and len(args.savepng) > 0:
+            plt.savePlot(args.savepng, bounds)
+        else:
+            plt.showPlot(bounds)
 
 
 def main():
@@ -235,6 +240,7 @@ def main():
                         help='Path to the thalweg shapefile',
                         type=argparse.FileType('r'))
     parser.add_argument('centerline',
+                        type=str,
                         help='Path to the desired output centerline shapefile')
     parser.add_argument('--density',
                         help='The spacing between points (in m) after densification. (default=0.5)',
@@ -247,6 +253,10 @@ def main():
                         type=float,
                         default=0,
                         help='smoothing "s" factor for the curve. (default=0/None)')
+    parser.add_argument('--savepng',
+                        type=str,
+                        default=0,
+                        help='Provide a path to save the plot to a png')
     parser.add_argument('--noviz',
                         help = 'Disable result visualization (faster)',
                         action='store_true',
