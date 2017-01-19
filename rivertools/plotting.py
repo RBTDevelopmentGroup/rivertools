@@ -54,15 +54,17 @@ class Plotter:
             plt.ylim(bounds[1], bounds[3])
             plt.xlim(bounds[0], bounds[2])
         plt.autoscale(enable=False)
-        plt.legend(loc='best')
-        plt.savefig(path)
+        plt.legend(loc='best', prop={'size':6})
+        plt.savefig(path, dpi=(300))
+        plt.close()
 
     @staticmethod
-    def showPlot(self, bounds=None):
+    def showPlot(bounds=None):
         if bounds is not None:
             plt.ylim(bounds[1], bounds[3])
             plt.xlim(bounds[0], bounds[2])
         plt.autoscale(enable=False)
         plt.legend(loc='best')
         plt.show()
+        plt.close()
         return

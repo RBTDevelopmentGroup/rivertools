@@ -221,7 +221,7 @@ def centerline(args):
         plt.plotShape(MultiLineString(alternateLines), '#FFFF00', 0.8, 25, 'Side-Channel Line')
 
         bounds = getBufferedBounds(rivershapeBounds, 10).bounds
-        if 'savepng' in args and len(args.savepng) > 0:
+        if 'savepng' in args and args.savepng is not None:
             plt.savePlot(args.savepng, bounds)
         else:
             plt.showPlot(bounds)
@@ -255,7 +255,6 @@ def main():
                         help='smoothing "s" factor for the curve. (default=0/None)')
     parser.add_argument('--savepng',
                         type=str,
-                        default=0,
                         help='Provide a path to save the plot to a png')
     parser.add_argument('--noviz',
                         help = 'Disable result visualization (faster)',
