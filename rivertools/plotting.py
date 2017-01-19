@@ -54,6 +54,7 @@ class Plotter:
             plt.ylim(bounds[1], bounds[3])
             plt.xlim(bounds[0], bounds[2])
         plt.autoscale(enable=False)
+        plt.title(" ".join(os.path.basename(path).split("-")))
         plt.legend(loc='best', prop={'size':6})
         plt.savefig(path, dpi=(300))
         plt.close()
