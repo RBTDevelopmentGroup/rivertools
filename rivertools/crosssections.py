@@ -18,7 +18,7 @@ def crosssections(args):
 
     You can use the following paths in this repo:
 
-    "../sampledata/Visit_2425/WettedExtent.shp" "../sampledata/Visit_2425/Islands.shp" "../sampledata/outputs/centerline.shp" "../sampledata/Visit_2425/DEM.tif" "../sampledata/outputs/crosssections.shp"
+    "../sampledata/Visit_2425/WettedExtent.shp" "../sampledata/Visit_2425/Thalweg.shp" "../sampledata/outputs/centerline.shp" --islands "../sampledata/Visit_2425/Islands.shp" --smoothing 0
 
     :param args:
     :return:
@@ -32,14 +32,18 @@ def crosssections(args):
     log.info("Opening Shapefiles...")
     rivershp = Shapefile(args.river.name)
     centerline = Shapefile(args.centerline.name)
-    islandsshp = Shapefile(args.islands.name)
+
+    islList = []
+    if 'islands' in args and args.islands is not None:
+        islandsshp = Shapefile(args.islands.name)
+        islList = islandsshp.featuresToShapely()
 
     # Pull the geometry objects out and disregard the fields
     polyRiverShape = rivershp.featuresToShapely()[0]['geometry']
     centerlines = centerline.featuresToShapely()
 
     # Load in the island shapes then filter them to qualifying only
-    islList = islandsshp.featuresToShapely()
+
     multipolIslands = MultiPolygon([isl['geometry'] for isl in islList if isl['fields']['Qualifying'] == 1])
 
     # Make a new rivershape using the exterior and only qualifying islands from that shapefile
@@ -302,9 +306,6 @@ def main():
     parser.add_argument('river',
                         help='Path to the river shape file. Donuts will be ignored.',
                         type=argparse.FileType('r'))
-    parser.add_argument('islands',
-                        help='Path to the islands shapefile.',
-                        type=argparse.FileType('r'))
     parser.add_argument('centerline',
                         help='Path to the centerline shapefile',
                         type=argparse.FileType('r'))
@@ -319,6 +320,9 @@ def main():
     parser.add_argument('stationsep',
                         type=float,
                         help='Lateral spacing between vertical DEM measurements')
+    parser.add_argument('islands',
+                        help='Path to the islands shapefile (None by default).',
+                        type=argparse.FileType('r'))
     parser.add_argument('--points',
                         help = 'Generate points at separation and stationsep (slower)',
                         action='store_true',
@@ -329,7 +333,7 @@ def main():
                         default=False)
     args = parser.parse_args()
 
-    if not args.river or not args.centerline or not args.islands or not args.crosssections or not args.dem:
+    if not args.river or not args.centerline or not args.crosssections or not args.dem:
         print "ERROR: Missing arguments"
         parser.print_help()
         exit(0)

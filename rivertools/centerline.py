@@ -37,27 +37,28 @@ def centerline(args):
     log.info("Opening Shapefiles...")
     rivershp = Shapefile(args.river.name)
     thalwegshp = Shapefile(args.thalweg.name)
-    islandsshp = Shapefile(args.islands.name)
+
+    islList = []
+    if 'islands' in args and args.islands is not None:
+        islandsshp = Shapefile(args.islands.name)
+        islList = islandsshp.featuresToShapely()
 
     # Pull the geometry objects out and disregard the fields
     polyRiverShape = rivershp.featuresToShapely()[0]['geometry']
     lineThalweg = thalwegshp.featuresToShapely()[0]['geometry']
 
     # Load in the island shapes then filter them to qualifying only
-    islList = islandsshp.featuresToShapely()
+
     multipolIslands = MultiPolygon([isl['geometry'] for isl in islList if isl['fields']['Qualifying'] == 1])
 
     # Make a new rivershape using the exterior and only qualifying islands from that shapefile
     log.info("Combining exterior and qualifying islands...")
     rivershape = Polygon(polyRiverShape.exterior).difference(multipolIslands)
 
-    if (args.smoothing > 0):
+    if 'density' in args and args.density > 0:
         # The Spline smooth gives us round curves.
-        log.info("Spline Smoothing...")
-        riverspliner = GeoSmoothing()
-        smoothRiver = riverspliner.smooth(rivershape)
-        # The simplifyer reduces point count to make things manageable
-        smoothRiver = smoothRiver.simplify(SHAPELY_SIMPLIFY)
+        log.info("Densifying Polygon...")
+        smoothRiver = densifyShape(rivershape, args.density)
     else:
         smoothRiver = rivershape
 
@@ -190,8 +191,8 @@ def centerline(args):
         plt.plotShape(bankshapes[1], '#AAAAFF', 0.5, 5)
 
         # The rivershape is slightly green
-        plt.plotShape(rivershape, '#AACCAA', 0.5, 8, 'River')
-        plt.plotShape(smoothRiver, '#AAAACC', 0.2, 10)
+        # plt.plotShape(rivershape, '#AACCAA', 0.5, 8, 'River')
+        plt.plotShape(smoothRiver, '#AAAACC', 0.2, 10, 'SmoothRiver')
 
         # Thalweg is green and where it extends to the bounding rectangle is orange
         plt.plotShape(newThalweg, '#FFA500', 1, 15, 'Thalweg Extension')
@@ -218,11 +219,15 @@ def main():
     parser.add_argument('thalweg',
                         help='Path to the thalweg shapefile',
                         type=argparse.FileType('r'))
-    parser.add_argument('islands',
-                        help='Path to the islands shapefile.',
-                        type=argparse.FileType('r'))
     parser.add_argument('centerline',
                         help='Path to the desired output centerline shapefile')
+    parser.add_argument('--density',
+                        help='The spacing between points (in m) after densification. (default=0.5)',
+                        type=float,
+                        default=0.5)
+    parser.add_argument('--islands',
+                        help='Path to the islands shapefile',
+                        type=argparse.FileType('r'))
     parser.add_argument('--smoothing',
                         type=float,
                         default=0,
@@ -233,7 +238,7 @@ def main():
                         default=False)
     args = parser.parse_args()
 
-    if not args.river or not args.thalweg or not args.islands or not args.centerline:
+    if not args.river or not args.thalweg or not args.centerline:
         log.error("ERROR: Missing arguments")
         parser.print_help()
         exit(0)

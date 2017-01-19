@@ -183,6 +183,19 @@ class TestShapeHelpers(unittest.TestCase):
         self.assertEqual(bisectLineSearch(0.0, line), 0)
         self.assertEqual(bisectLineSearch(100.0, line), 99)
 
+    def test_densifyShape(self):
+        from rivertools.shapes import densifyShape
+        self.assertTrue(False)
+
+    def test_densifyRing(self):
+        from rivertools.shapes import _densifyRing
+        self.assertTrue(False)
+
+    def test_densifySegment(self):
+        from rivertools.shapes import _densifySegment
+        self.assertTrue(False)
+
+
 class TestMetricClass(unittest.TestCase):
 
     def test_interpolateRasterAlongLine(self):

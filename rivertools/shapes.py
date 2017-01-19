@@ -267,6 +267,56 @@ def getExtrapoledLine(line, length):
 
     return LineString([p2, (newX, newY)])
 
+def densifyShape(shape, spacing):
+    """
+    Densifies a shape (including
+    :param shape:
+    :param spacing: the spacing between points
+    :return:
+    """
+    ext = _densifyRing(shape.exterior, spacing)
+
+    isls = []
+    for isl in shape.interiors:
+        isls.append(_densifyRing(isl, spacing))
+
+    if len(isls) == 0:
+        return ext
+    else:
+        return ext.difference(MultiPolygon(isls))
+
+def _densifyRing(ring, spacing):
+    """
+    Densify this particular ring using _densify segment on each segment
+    :param ring:
+    :param spacing:
+    :return:
+    """
+    # Densify all the line segments. This return a list with the first point and any linear interpolated points
+    densesegments = [_densifySegment(LineString([ring.coords[x-1], ring.coords[x]]), spacing) for x in range(1, len(ring.coords))]
+    # Finally add the very last point to complete the ring
+    densesegments.append([ring.coords[-1]])
+    poly = Polygon(LinearRing([pt for seg in densesegments for pt in seg]))
+    return poly
+
+
+def _densifySegment(segment, spacing):
+    """
+    A segment is defined as a LineString with two points in it. Spacing is the point spacing we want.
+    :param segment:
+    :param spacing:
+    :return:
+    """
+    if segment.length < spacing:
+        return [segment.coords[0]]
+
+    pts = []
+    for currDist in np.arange(0, segment.length, spacing):
+        newpt = segment.interpolate(currDist).coords[0]
+        if newpt != segment.coords[-1]:
+            pts.append(newpt)
+    return pts
+
 def reconnectLine(baseline, separateLine):
     """
     Smoothing can separate the centerline from its alternates. This function
