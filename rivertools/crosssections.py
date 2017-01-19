@@ -166,6 +166,11 @@ def crosssections(args):
         outFeature.SetField("Extension", 0) # lateral extension currently always zero
         outFeature.SetField("StatSep", args.stationsep)
 
+        if xs.isMain:
+            outFeature.SetField('Channel', 'Main')
+        else:
+            outFeature.SetField('Channel', 'Side')
+
         # Now write all the metrics to a file
         for metricName, metricValue in xs.metrics.iteritems():
             try:
@@ -261,6 +266,10 @@ def AddMetaFields(outShape):
 
     # Lateral spacing of stations along a cross section
     outShape.createField("StatSep", ogr.OFTReal)
+
+    # Which channel the cross section is in: 'Main' or 'Side'
+    outShape.createField("Channel", ogr.OFTString)
+    ogr.FieldDefn("Channel", ogr.OFTString).SetWidth(4)
 
 def xsValueValidate(linexs):
     """
