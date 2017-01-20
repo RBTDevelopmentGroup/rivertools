@@ -108,7 +108,7 @@ def crosssections(args):
     # --------------------------------------------------------
     # Valid/invalid line testing
     # --------------------------------------------------------
-    log.info("Testin XSs for Validity...")
+    log.info("Testing XSs for Validity...")
 
     for linexs in allxslines:
         xsValueValidate(linexs)
