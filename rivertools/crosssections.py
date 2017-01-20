@@ -88,20 +88,23 @@ def crosssections(args):
                 pointcloud['separation'].append(pt)
 
             keep = True
-            xsObj = XSObj(channelID, newxs, mainChannel)
-
-            # If this is not the main channel and our cross section touches the exterior wall in
-            # more than one place then lose it
-            if not mainChannel:
-                dista = Point(newxs.coords[0]).distance(rivershape.exterior)
-                distb = Point(newxs.coords[1]).distance(rivershape.exterior)
-                if dista < 0.001 and distb < 0.001:
-                    keep = False
-
-            if keep:
-                linexs.append(xsObj)
+            if newxs is None:
+                keep = False
             else:
-                throwaway.append(newxs)
+                xsObj = XSObj(channelID, newxs, mainChannel)
+
+                # If this is not the main channel and our cross section touches the exterior wall in
+                # more than one place then lose it
+                if not mainChannel:
+                    dista = Point(newxs.coords[0]).distance(rivershape.exterior)
+                    distb = Point(newxs.coords[1]).distance(rivershape.exterior)
+                    if dista < 0.001 and distb < 0.001:
+                        keep = False
+
+                if keep:
+                    linexs.append(xsObj)
+                else:
+                    throwaway.append(newxs)
 
         allxslines.append(linexs)
 
