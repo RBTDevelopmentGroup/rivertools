@@ -229,14 +229,14 @@ def crosssections(args):
         # Centerline is black
         plt.plotShape(MultiLineString([g['geometry'] for g in centerlines]), '#000000', 0.5, 20, "Centerlines")
 
-        # The valid crosssections are blue
-        plt.plotShape(MultiLineString([g.geometry for g in flatxsl if g.isValid]), '#0000FF', 0.7, 25, "Valid Cross Sections")
+        # Throwaway lines (the ones that are too whack to even test for validity) are faded red
+        plt.plotShape(MultiLineString(throwaway), '#FF0000', 0.3, 20, "Throwaway Lines (not stored)")
 
         # Invalid crosssections are orange
         plt.plotShape(MultiLineString([g.geometry for g in flatxsl if not g.isValid]), '#00FF00', 0.7, 25, "Invalid Cross Sections")
 
-        # Throwaway lines (the ones that are too whack to even test for validity) are faded red
-        plt.plotShape(MultiLineString(throwaway), '#FF0000', 0.3, 20, "Throwaway Lines (not stored)")
+        # The valid crosssections are blue
+        plt.plotShape(MultiLineString([g.geometry for g in flatxsl if g.isValid]), '#0000FF', 0.7, 30, "Valid Cross Sections")
 
         bounds = getBufferedBounds(rivershape, 10).bounds
         if 'savepng' in args and args.savepng is not None:
@@ -335,8 +335,8 @@ def main():
     parser.add_argument('stationsep',
                         type=float,
                         help='Lateral spacing between vertical DEM measurements')
-    parser.add_argument('islands',
-                        help='Path to the islands shapefile (None by default).',
+    parser.add_argument('--islands',
+                        help='Path to the islands shapefile',
                         type=argparse.FileType('r'))
     parser.add_argument('--savepng',
                         type=str,

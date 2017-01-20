@@ -140,18 +140,28 @@ def createTangentialLine(dist, centerline, length):
     :param centerline:
     :return:
     """
-
+    incr = 0.01
     point = centerline.interpolate(dist)
     pt = point.coords[0]
 
-    coords = list(centerline.coords)
-
-    segind = bisectLineSearch(dist, centerline)
-    seg = LineString([coords[segind], coords[segind+1]])
+    # This is the better way to do it but it's too slow for now
+    # coords = list(centerline.coords)
+    # segind = bisectLineSearch(dist, centerline)
+    # seg = LineString([coords[segind], coords[segind+1]])
 
     # The slope is rise over run of this segment
-    rise = seg.coords[1][1] - seg.coords[0][1]
-    run = seg.coords[1][0] - seg.coords[0][0]
+    # rise = seg.coords[1][1] - seg.coords[0][1]
+    # run = seg.coords[1][0] - seg.coords[0][0]
+
+    # Find a point nearby and use it to find the slope of the line
+    if dist > incr:
+        point2 = centerline.interpolate(dist - incr)
+        rise = point2.coords[0][1] - point.coords[0][1]
+        run = point2.coords[0][0] - point.coords[0][0]
+    else:
+        point2 = centerline.interpolate(dist + incr)
+        rise = point.coords[0][1] - point2.coords[0][1]
+        run = point.coords[0][0] - point2.coords[0][0]
 
     theta = math.atan2(rise, run)
     perptheta = theta + math.pi/2
