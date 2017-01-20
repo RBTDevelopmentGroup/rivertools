@@ -173,6 +173,51 @@ def createTangentialLine(dist, centerline, length):
          pt[1] - length * math.sin(perptheta))]), point
 
 
+def chopCenterlineEnds(line, shape):
+    """
+
+    :param line:
+    :param shape:
+    :return:
+    """
+    log = Logger("chopCenterlineEnds")
+
+    # Trim to be inside the river shape.
+    centerlineChopped = line
+    centerlineIntersection = line.intersection(shape)
+    # It it's a multiline string that means it crosses over the channel at some point
+    if centerlineIntersection.type == "MultiLineString":
+        log.error("Centerline Crosses Channel Boundary. Continuing...")
+
+        # Get the start and endpoints where the line crosses the rivershape
+        startdist = line.project(Point(centerlineIntersection[0].coords[0]))
+        enddist = line.project(Point(centerlineIntersection[-1].coords[-1]))
+
+        pts = []
+
+        for pt in line.coords:
+            projectpt = line.project(Point(pt))
+            if  startdist < projectpt < enddist:
+                pts.append(pt)
+
+        # Add the first point in if it isn't already there
+        firstpoint = line.interpolate(startdist).coords[0]
+        if pts[0] != firstpoint:
+            pts.insert(0, firstpoint)
+
+        # Add the last point in if it isn't already there
+        lastpoint = line.interpolate(enddist).coords[0]
+        if pts[-1] != lastpoint:
+            pts.append(lastpoint)
+
+        centerlineChopped = LineString(pts)
+    else:
+        # If it's just a linestring then we can safely use it
+        centerlineChopped = centerlineIntersection
+
+    return centerlineChopped
+
+
 def bisectLineSearch(dist, line):
     """
     Use a bisect approach to get the index of the start of the line segment that contains

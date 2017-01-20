@@ -116,40 +116,6 @@ def centerline(args):
     else:
         centerlineSmooth = centerline
 
-    # Trim to be inside the river shape.
-    centerlineChopped = centerlineSmooth
-    centerlineIntersection = centerlineSmooth.intersection(rivershape)
-    # It it's a multiline string that means it crosses over the channel at some point
-    if centerlineIntersection.type == "MultiLineString":
-        log.error("Centerline Crosses Channel Boundary. Continuing...")
-
-        # Get the start and endpoints where the line crosses the rivershape
-        startdist = centerlineSmooth.project(Point(centerlineIntersection[0].coords[0]))
-        enddist = centerlineSmooth.project(Point(centerlineIntersection[-1].coords[-1]))
-
-        pts = []
-
-        for pt in centerlineSmooth.coords:
-            projectpt = centerlineSmooth.project(Point(pt))
-            if  startdist < projectpt < enddist:
-                pts.append(pt)
-
-        # Add the first point in if it isn't already there
-        firstpoint = centerlineSmooth.interpolate(startdist).coords[0]
-        if pts[0] != firstpoint:
-            pts.insert(0, firstpoint)
-
-        # Add the last point in if it isn't already there
-        lastpoint = centerlineSmooth.interpolate(enddist).coords[0]
-        if pts[-1] != lastpoint:
-            pts.append(lastpoint)
-
-        centerlineChopped = LineString(pts)
-    else:
-        # If it's just a linestring then we can safely use it
-        centerlineChopped = centerlineIntersection
-
-
     # Now we've got the main centerline let's flip the islands one by one
     # and get alternate lines
     alternateLines = []
@@ -159,7 +125,7 @@ def centerline(args):
         if altLine.type == "LineString":
             # We difference the alternate lines with the main line
             # to get just the bit that is different
-            diffaltline = altLine.difference(centerlineChopped)
+            diffaltline = altLine.difference(centerlineSmooth)
 
             if (args.smoothing > 0):
                 # Now smooth this line to be roughly the consistency of skippy peanut butter
@@ -167,11 +133,15 @@ def centerline(args):
 
                 # Now we reconnect the bit that is different with the smoothed
                 # Segment since smoothing can mess up the intersection
-                reconLine = reconnectLine(centerlineChopped, smoothAlt)
+                reconLine = reconnectLine(centerlineSmooth, smoothAlt)
+                chopped = chopCenterlineEnds(reconLine, Polygon(rivershape.exterior))
             else:
-                reconLine = diffaltline
+                chopped = diffaltline
 
-            alternateLines.append(reconLine)
+            alternateLines.append(chopped)
+
+    # Chop the centerline at the ends where it intersects the rivershape
+    centerlineChopped = chopCenterlineEnds(centerlineSmooth, Polygon(rivershape.exterior))
 
     # --------------------------------------------------------
     # Write the output Shapefile

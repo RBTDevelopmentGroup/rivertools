@@ -57,6 +57,7 @@ class Plotter:
         plt.title(" ".join(os.path.basename(path).split("-")))
         plt.legend(loc='best', prop={'size':6})
         plt.savefig(path, dpi=(300))
+        plt.clf()
         plt.close()
 
     @staticmethod
@@ -67,5 +68,6 @@ class Plotter:
         plt.autoscale(enable=False)
         plt.legend(loc='best')
         plt.show()
+        plt.clf()
         plt.close()
         return
