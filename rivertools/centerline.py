@@ -122,14 +122,29 @@ def centerline(args):
     # It it's a multiline string that means it crosses over the channel at some point
     if centerlineIntersection.type == "MultiLineString":
         log.error("Centerline Crosses Channel Boundary. Continuing...")
-        # Get the start and endpoints
-        startdist = centerlineSmooth.project(centerlineIntersection[0].coords[0])
-        enddist = centerlineSmooth.project(centerlineIntersection[-1].coords[-1])
+
+        # Get the start and endpoints where the line crosses the rivershape
+        startdist = centerlineSmooth.project(Point(centerlineIntersection[0].coords[0]))
+        enddist = centerlineSmooth.project(Point(centerlineIntersection[-1].coords[-1]))
+
         pts = []
+
         for pt in centerlineSmooth.coords:
-            if centerlineSmooth.project(pt) >= startdist and centerlineSmooth.project(pt) <= enddist:
+            projectpt = centerlineSmooth.project(Point(pt))
+            if  startdist < projectpt < enddist:
                 pts.append(pt)
-        centerlineChopped = LineString(centerlineSmooth)
+
+        # Add the first point in if it isn't already there
+        firstpoint = centerlineSmooth.interpolate(startdist).coords[0]
+        if pts[0] != firstpoint:
+            pts.insert(0, firstpoint)
+
+        # Add the last point in if it isn't already there
+        lastpoint = centerlineSmooth.interpolate(enddist).coords[0]
+        if pts[-1] != lastpoint:
+            pts.append(lastpoint)
+
+        centerlineChopped = LineString(pts)
     else:
         # If it's just a linestring then we can safely use it
         centerlineChopped = centerlineIntersection
@@ -144,7 +159,7 @@ def centerline(args):
         if altLine.type == "LineString":
             # We difference the alternate lines with the main line
             # to get just the bit that is different
-            diffaltline = altLine.difference(centerline)
+            diffaltline = altLine.difference(centerlineChopped)
 
             if (args.smoothing > 0):
                 # Now smooth this line to be roughly the consistency of skippy peanut butter
