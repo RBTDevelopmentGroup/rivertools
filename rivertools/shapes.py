@@ -49,7 +49,7 @@ class Shapefile:
 
     def featuresToShapely(self):
         if len(self.features) == 0:
-            return
+            return []
 
         feats = []
         for feat in self.features:
