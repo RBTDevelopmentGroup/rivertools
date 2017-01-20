@@ -297,7 +297,8 @@ def xsValueValidate(linexs):
 
 def xsOverlapValidate(allxslines):
     """
-    See if any
+    See if any valid cross sections overlap XSs from any other line and
+    invalidate everything!
     :return: Nothing. This edits in place.
     """
     # Loop over lines
@@ -307,7 +308,7 @@ def xsOverlapValidate(allxslines):
 
         for xs in xslist0:
             for xsTest in xslist1:
-                if xs.geometry.intersects(xsTest.geometry):
+                if xs.isValid and xsTest.isValid and xs.geometry.intersects(xsTest.geometry):
                     xs.isValid = False
                     xsTest.isValid = False
 
