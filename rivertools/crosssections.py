@@ -67,6 +67,7 @@ def crosssections(args):
             self.metrics = {}
             self.isValid = False
             self.isMain = isMain
+            self.queueInvalidate = False
 
     allxslines = []
     throwaway = []
@@ -305,15 +306,26 @@ def xsOverlapValidate(allxslines):
     :return: Nothing. This edits in place.
     """
     # Loop over lines
-    for linecombo in itertools.combinations(allxslines,2):
+    invalidate = []
+    for linecombo in itertools.combinations(allxslines, 2):
         xslist0 = [xs for xs in linecombo[0] if xs.isValid]
         xslist1 = [xs for xs in linecombo[1] if xs.isValid]
 
         for xs in xslist0:
             for xsTest in xslist1:
                 if xs.isValid and xsTest.isValid and xs.geometry.intersects(xsTest.geometry):
-                    xs.isValid = False
-                    xsTest.isValid = False
+                    invalidate.append((xs.centerlineID, xs))
+                    xs.queueInvalidate = True
+                    xsTest.queueInvalidate = True
+
+    # Now do the actual work
+    for line in allxslines:
+        for xs in line:
+            if xs.queueInvalidate:
+                xs.queueInvalidate = False
+                xs.isValid = False
+
+
 
 
 def main():
