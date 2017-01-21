@@ -53,7 +53,7 @@ class NARVoronoi:
         self.regions = self._vor.regions
         self.point_region = self._vor.point_region
 
-    def collectCenterLines(self, flipIsland=None):
+    def collectCenterLines(self, rivershape, flipIsland=None):
         """
 
         :param flipIsland: The id of the island to reassign to a different side. Useful when calculating alternate
@@ -102,9 +102,34 @@ class NARVoronoi:
                         if len(lineseg) == 2:
                             centerlines.append(LineString(lineseg))
 
-        # linemerge and unary_union are used to turn MultiLineStrings into a single LineString. We might not succeed
-        # Though if the lines don't connect
-        return linemerge(unary_union(centerlines))
+        merged = linemerge(unary_union(centerlines))
+
+        # Sometimes what we get back is a ring. This is a tricky case because shapely may not choose the start and
+        # endpoint correctly. So we have to cycle through and choose new ones
+        if merged.is_closed:
+            # Get the index of the farthest point outside the geometry
+            candidates = []
+            for ind, coord in enumerate(merged.coords):
+                if not rivershape.contains(Point(coord)):
+                    candidates.append((ind, rivershape.distance(Point(coord))))
+            candidates.sort(key=lambda tup: tup[1])
+            outsideind = candidates[-1][0]
+
+            # Loop through the points with this transform to move the start/end point
+            newline = []
+            maxl = len(merged.coords)
+            # Add the first point in
+            newline.append(merged.coords[outsideind - 1])
+            # Now add every other point
+            for idx in range(0, maxl):
+                t = idx + outsideind
+                if t >= maxl:
+                    t = t - maxl
+                newline.append(merged.coords[t])
+
+            merged = LineString(newline)
+
+        return merged
 
     def createshapes(self):
         """

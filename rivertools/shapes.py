@@ -189,15 +189,24 @@ def chopCenterlineEnds(line, shape):
     if centerlineIntersection.type == "MultiLineString":
         log.error("Centerline Crosses Channel Boundary. Continuing...")
 
+        # We need to pick out the start and end points so collect them from all
+        # the intersections and then sort them by distance from the start of
+        # the original line
+        endpts = []
+        for segline in centerlineIntersection:
+            endpts.append(Point(segline.coords[0]))
+            endpts.append(Point(segline.coords[-1]))
+        endpts.sort(key=lambda pt: line.project(pt))
+
         # Get the start and endpoints where the line crosses the rivershape
-        startdist = line.project(Point(centerlineIntersection[0].coords[0]))
-        enddist = line.project(Point(centerlineIntersection[-1].coords[-1]))
+        startdist = line.project(endpts[0])
+        enddist = line.project(endpts[-1])
 
         pts = []
 
         for pt in line.coords:
             projectpt = line.project(Point(pt))
-            if  startdist < projectpt < enddist:
+            if startdist < projectpt < enddist:
                 pts.append(pt)
 
         # Add the first point in if it isn't already there

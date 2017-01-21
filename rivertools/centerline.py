@@ -106,7 +106,7 @@ def centerline(args):
     log.info("Calculating Voronoi Polygons...")
     myVorL = NARVoronoi(points)
 
-    centerline = myVorL.collectCenterLines()
+    centerline = myVorL.collectCenterLines(Polygon(rivershape.exterior))
 
     if (args.smoothing > 0):
         # This is the function that does the actual work of creating the centerline
@@ -120,7 +120,7 @@ def centerline(args):
     # and get alternate lines
     alternateLines = []
     for idx, island in enumerate(smoothRiver.interiors):
-        altLine = myVorL.collectCenterLines(flipIsland=idx)
+        altLine = myVorL.collectCenterLines(Polygon(rivershape.exterior), flipIsland=idx)
         log.info("  Spline Smoothing Alternate line...")
         if altLine.type == "LineString":
             # We difference the alternate lines with the main line
