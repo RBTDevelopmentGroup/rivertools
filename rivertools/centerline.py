@@ -7,7 +7,6 @@ from logger import Logger
 from vor import NARVoronoi
 from shapes import *
 from geosmoothing import *
-from plotting import Plotter
 
 ########################################################
 # Here are some factors you can play with
@@ -177,6 +176,7 @@ def centerline(args):
     # Do a little show and tell with plotting and whatnot
     # --------------------------------------------------------
     if not args.noviz:
+        from plotting import Plotter
         log.info("Plotting Results...")
 
         plt = Plotter()

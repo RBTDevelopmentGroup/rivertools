@@ -1,16 +1,11 @@
-from shapely.geometry import *
 import argparse
 import sys
-import numpy as np
 from raster import Raster
 from shapes import *
-from plotting import Plotter
-from logger import Logger
 from metrics import *
 from os import path
 from datetime import datetime
 import itertools
-from time import strftime
 
 def crosssections(args):
     """
@@ -223,6 +218,7 @@ def crosssections(args):
     # Do a little show and tell with plotting and whatnot
     # --------------------------------------------------------
     if not args.noviz:
+        from plotting import Plotter
         log.info("Plotting Results...")
 
         plt = Plotter()
