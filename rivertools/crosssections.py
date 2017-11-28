@@ -360,7 +360,7 @@ def main():
     parser.add_argument('--noviz',
                         help = 'Disable result visualization (faster)',
                         action='store_true',
-                        default=False)
+                        default=True)
     args = parser.parse_args()
 
     if not args.river or not args.centerline or not args.crosssections or not args.dem:
