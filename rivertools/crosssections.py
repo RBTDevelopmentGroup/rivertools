@@ -63,6 +63,7 @@ def crosssections(args):
             self.isValid = False
             self.isMain = isMain
             self.queueInvalidate = False
+            self.distance = 0.0
 
     allxslines = []
     throwaway = []
@@ -88,6 +89,10 @@ def crosssections(args):
                 keep = False
             else:
                 xsObj = XSObj(channelID, newxs, mainChannel)
+
+                # Store the distance down the centerline as a metric on the cross section.
+                # Note that side channels will start from zero.
+                xsObj.distance = currDist
 
                 # If this is not the main channel and our cross section touches the exterior wall in
                 # more than one place then lose it
@@ -164,6 +169,7 @@ def crosssections(args):
         outFeature.SetField("Banks", path.abspath(args.river.name))
         outFeature.SetField("Extension", 0) # lateral extension currently always zero
         outFeature.SetField("StatSep", args.stationsep)
+        outFeature.SetField("Distance", xs.distance)
 
         if xs.isMain:
             outFeature.SetField('Channel', 'Main')
@@ -276,6 +282,9 @@ def AddMetaFields(outShape):
     # Which channel the cross section is in: 'Main' or 'Side'
     outShape.createField("Channel", ogr.OFTString)
     ogr.FieldDefn("Channel", ogr.OFTString).SetWidth(4)
+
+    # Distance of the cross section down the centerline
+    outShape.createField("Distance", ogr.OFTReal)
 
 def xsValueValidate(linexs):
     """
