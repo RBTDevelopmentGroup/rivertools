@@ -21,20 +21,21 @@ pip install git+https://github.com/RBTDevelopmentGroup/rivertools
 The centerline tool identifies line down the middle of a channel polygon layer. It works for both single channels and channels with islands. A [thalweg](https://en.wikipedia.org/wiki/Thalweg), or some crude representation of the main thread of the channel is required. This doesn't need to be accurate and can simply be a single line that roughly approximates the flow the channel. Refer to the [centerline tool documentation](./docs/centerline.md) for more detail.
 
 ```sh
-usage: centerline [-h] [--smoothing SMOOTHING] [--noviz]
-                  river thalweg islands centerline
+usage: centerline [-h] [--islands islands] [--smoothing SMOOTHING] [--noviz]
+                  river thalweg centerline
 
 positional arguments:
   river                 Path to the river shape file. Donuts will be ignored.
-  thalweg               Path to the thalweg shapefile
-  islands               Path to the islands shapefile.
-  centerline            Path to the desired output centerline shapefile
+  thalweg               Path to the thalweg shapefile.
+  centerline            Path to the desired output centerline shapefile.
 
 optional arguments:
   -h, --help            show this help message and exit
+  --islands             Path to the islands shapefile.
   --smoothing SMOOTHING
                         smoothing "s" factor for the curve. (default=0/None)
-  --noviz               Disable result visualization (faster)
+  --noviz               Disable result visualization (faster).
+  --density             Spacing between river vertex points after densification. (default=0.5)
 
 ```
 
