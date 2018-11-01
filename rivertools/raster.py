@@ -61,7 +61,12 @@ class Raster:
         # Only works for geotransforms with no rotation.
         px = int((pt[0] - self.left) / self.cellWidth)  # x pixel
         py = int((pt[1] - self.top) / self.cellHeight)  # y pixel
-        val = self.array[py, px]
+
+        if px < self.cols and py < self.rows:
+            val = self.array[py, px]
+        else:
+            return np.nan
+
         if isclose(val, self.nodata, rel_tol=1e-07):
             return np.nan
 
